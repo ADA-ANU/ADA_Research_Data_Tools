@@ -1,0 +1,482 @@
+---
+title: "Data Quality Checks: "
+author: ""
+date: " "
+output: word_document
+---
+
+
+
+<!-- 1. unique value check: duplicated() -->
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+####################################################################################################
+################              Load packages                        #################################
+####################################################################################################
+library (tidyverse)
+library(haven);             # Imports SPSS (.sav) data
+library(labelled);          # Calls value label, variable label and other information of the data
+library(flextable)          # Creates tables 
+library(officer)            # Helps using various micro-soft office formats 
+library (spelling)          # For checking spelling error
+library (stringr)           # Looking for specific string ('word' or 'parts of word')
+library (dplyr)
+
+flexPrintFun <- function(x){
+  flextable(x) %>%
+    width(j=1, width = 1.5) %>%
+    width(j=2, width = 3.0) %>%
+    width(j=3, width = 1.0) %>%
+    width(j=4, width = 1.0) %>%
+    hrule(rule="auto", part="all") %>%
+    fontsize(part="header", size=11) %>%
+    fontsize(part="body", size=10) 
+}
+
+
+cat("**Summary report**");cat("\n"); cat("\n")
+summ <- data.frame(matrix(rep ('', times = 16), ncol = 4, byrow = F)) 
+colnames (summ) <- c('Section', 'Issue', 'Suggestion', 'Response' )
+theme_box(flexPrintFun (data.frame(summ)))
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+####################################################################################################
+################      Read data and get variable information       #################################
+####################################################################################################
+
+
+data <- haven::read_sav("./Data/.sav")
+
+conf_var  <- c( 'p_seifa', 'p_gender', 'p_age_group_ADA', 'd_education')
+
+var_info  <- look_for(data, details = TRUE) %>%                  #add details about each variable
+             lookfor_to_long_format() %>%
+             convert_list_columns_to_character()
+
+varLabel <- var_label(data)
+varName  <- unique(var_info$variable)
+
+colnames (var_info) <- c("pos", "variable", "label", "col_type", "levels", "value_labels", "class", "type",
+                         "na_values",  "na_range", "unique_values", "count_missing", "range")
+
+cat("**Detailed report**");cat("\n"); cat("\n")
+
+# Function to build flextable
+flexPrintFun <- function(x){
+  flextable(x) %>%
+    width(j=1, width = 1) %>%
+    width(j=2, width = 2.5) %>%
+    width(j=3, width = 2) %>%
+    width(j=4, width = 1) %>%
+    hrule(rule="auto", part="all") %>%
+    fontsize(part="header", size=13) %>%
+    fontsize(part="body", size=12) 
+}
+
+sum_rep  <- data.frame(matrix (rep (NA, times = 28), ncol = 4))
+colnames (sum_rep) <- c('Section', 'Issue',  'Suggestion', 'Response')
+theme_box(flexPrintFun (sum_rep))
+cat("\n"); cat("\n")
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+####################################################################################################
+################   Tables with basic information  (Not derived from data) ##########################
+####################################################################################################
+
+cat("**1.1 Basic information**"); 
+cat("\n"); cat("\n")
+flexPrintFun <- function(x){
+  flextable(x) %>%
+    width(j=1, width = 2) %>%
+    width(j=2, width = 4.5) %>%
+    hrule(rule="auto", part="all") %>%
+    fontsize(part="header", size=13) %>%
+    fontsize(part="body", size=12) 
+}
+
+intro <- flexPrintFun (data.frame(matrix(c('Ticket','Title', 'ID', 'Date', 'Archivist', 'Working folder',rep ('', times = 6)), ncol = 2, byrow = F) )  )
+intro <- set_header_labels(intro, X1 = "Processing report", X2 = "Processing report")
+theme_box(merge_at(intro, i = 1, j = 1:2, part = "header"))
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+cat("**1.2 Depositited data files**");cat("\n"); cat("\n")
+
+cat("\n");cat("**  **");cat("\n"); 
+intr1 <- flextable(data.frame(matrix(c('Data File','Questionnaire','Report', 'Notes', 'Deposit form', 'Deposit license',
+                                      rep ('', times = 24)), ncol = 5, byrow = F) )) 
+width(theme_box(set_header_labels(intr1, X1= '', X2 = 'Original', X3 = 'ADA file name', X4 = 'In ADA data', X5 = 'In Archive' )),width = 1.30)
+
+
+
+cat("\n"); cat("\n")
+cat("**Data Quality Checks**");cat("\n"); cat("\n")
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+####################################################################################################
+################          Check for duplicated variable labels     #################################
+####################################################################################################
+
+flexPrintFun <- function(x){
+  flextable(x) %>%
+    width(j=1, width = 0.50) %>%
+    width(j=2, width = 0.75) %>%
+    width(j=3, width = 2.50) %>%
+    width(j=4, width = 0.75) %>%
+    width(j=5, width = 0.75) %>%
+    width(j=6, width = 0.50) %>%
+    hrule(rule="auto", part="all") %>%
+    fontsize(part="header", size=8) %>%
+    fontsize(part="body", size=8) 
+}
+
+cat("\n"); cat("\n")
+cat("*Acronym used:* KO = Keep Original; SN = Suggest New (name, variable label or value label); 'Con' = Confidentialise .");
+cat("\n"); cat("\n")
+
+dup_label  <- as.character(varLabel[which(duplicated(as.character(varLabel))==TRUE)])               # Find the duplicated label, and extract them   
+posi <- as.numeric(which(var_info$label %in% dup_label))                                                   # Get position of duplicated label, %in% indicates that check each element in                                                                                                              #var_info$label whether it appears in dup_label
+                # %in% check var_info$label every element weather apper in the dup_label S??????
+
+nv_col <- rep('', length(posi)); su_col <- rep('KO/ Change label', length(posi));
+
+dup_varia  <- data.frame(matrix (cbind(var_info$pos[posi], var_info$variable [posi], var_info$label[posi], nv_col, su_col, su_col), ncol = 6))  # reduce
+colnames (dup_varia ) <- c('Serial', 'Name',  'Duplicate label', 'Suggestion', 'Response', 'Status')
+dup_varia <- dup_varia [!duplicated(dup_varia$Serial),,drop=FALSE]                   #Unique each Serial, 
+                                                                                     #and keep the original dimension, which mean it still is a  table
+dup_varia <-dup_varia[order(dup_varia[,3]),]                                         #sort the table according to column 'Duplicate label'
+
+
+a <- ifelse (length (posi) > 0,  'Most statistical software allows the use of duplicate variable labels. However, duplicated variable labels, even with different variable names, create confusions regarding the content of the variable. To avoid confusion, using unique variable labels across the data set is recommended. *A list of variables with duplicated variable labels is presented in the table below:*', 'Most statistical software allows the use of duplicate variable labels. However, duplicated variable labels, even with different variable names, create confusions regarding the content of the variable. To avoid confusion, using unique variable labels across the data set is recommended. *This data have no duplicated variable label*.');
+
+cat("*2.1 Check for duplicated variable labels:*")
+cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+theme_box(flexPrintFun (dup_varia))
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+####################################################################################################
+################            Quantitative Data Cleaning             #################################
+####################################################################################################
+
+cat("\n"); cat("\n")
+cat("\n"); cat("\n")
+
+flexPrintFun <- function(x){
+  flextable(x) %>%
+    width(j=1, width = 0.75) %>%
+    width(j=2, width = 2.50) %>%
+    width(j=3, width = 0.75) %>%
+    width(j=4, width = 0.75) %>%
+    width(j=5, width = 0.75) %>%
+    width(j=6, width = 0.50) %>%
+    hrule(rule="auto", part="all") %>%
+    fontsize(part="header", size=8) %>%
+    fontsize(part="body", size=8) 
+}
+
+################               Variable length check               #################################
+
+cat("\n"); cat("\n")
+v_number     <- which(nchar (varName) > 11)         #position of the variable larger than 11 character
+v_name       <- varName[v_number]; 
+issue  <- as.numeric(nchar(v_name))
+nv_col <- rep('',length(v_name)); su_col <- rep('KO/SN',length(v_name))
+
+tab1 <- data.frame(matrix(cbind(v_number,v_name, issue, su_col, nv_col, nv_col),ncol = 6))
+colnames (tab1) <- c('Serial', 'Variable name', 'Length (Character)', 'Suggestion', 'Response', 'Status')
+
+a <- ifelse (length (v_number) > 0, 'Shorter variable names are preferable and are convenient in statistical analyses. The table represents a list of variables having names with 12 or more characters. Decide to keep the original name or propose a new *shorter* name for respective variable(s):', 'Shorter variable names are preferable and are convenient in statistical analyses. All variables in the data set have reasonably shorter names (less than 12 characters).');
+
+
+cat("\n"); cat("\n")
+cat("*3.1 Variable name check (for length):*")  
+cat("\n"); cat("\n")
+
+cat (a)
+
+cat("\n"); cat("\n")
+theme_box(flexPrintFun(tab1))
+cat("\n"); cat("\n")
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+####################################################################################################
+################                Variable label length check for short variable label       #################################
+####################################################################################################
+flexPrintFun <- function(x){
+  flextable(x) %>%
+    width(j=1, width = 1.00) %>%
+    width(j=2, width = 2.00) %>%
+    width(j=3, width = 0.75) %>%
+    width(j=4, width = 0.75) %>%
+    width(j=5, width = 0.75) %>%
+    width(j=6, width = 0.50) %>%
+    hrule(rule="auto", part="all") %>%
+    fontsize(part="header", size=8) %>%
+    fontsize(part="body", size=8) 
+}
+
+cat("\n"); cat("\n")
+cat("*4.0 Variable label check*");cat("\n"); cat("\n")
+cat("4.1 Variable label length check");cat("\n"); cat("\n")
+
+v_number  <- which (as.numeric(nchar (unique(var_info$label)))%in% c(1:29))   #position of the variable lable that range from 1 to 29
+seri_col <- paste(v_number, varName[v_number], sep = ' :');                         #
+
+nv_col <- rep('',length(seri_col)); su_col <- rep('KO/SN',length(seri_col))
+
+tab1      <- data.frame(matrix(cbind(seri_col, unique(var_info$label)[v_number], 
+                        as.numeric(nchar(unique(var_info$label)[v_number])), su_col, nv_col, nv_col ), ncol = 6))
+colnames (tab1) <- c('Serial: Name', 'Variable label', 'Length', 'Suggestion', 'Response', 'Status' )
+
+a <- ifelse (length (seri_col) > 0, 'Short variable labels without sufficient information  as they may not carry sufficient information. A list of varables with short names (less than 30 characters) are presented below. Please check the variable labels and suggest if any change is required', 'Short variable labels without sufficient information  as they may not carry sufficient information. Length of variable labels were checked and none of the variables has label with length less than 30 characters.');
+
+cat("\n"); cat("\n")
+cat ("*Possibly short non-informative Variable labels (lengths less than 30 characters):*")
+cat("\n"); cat("\n")
+cat (a)
+
+cat("\n"); cat("\n")
+theme_box(flexPrintFun(tab1))
+cat("\n"); cat("\n")
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+cat("\n"); cat("\n")
+cat("**Issues regarding the long length of variable labels:**");cat("\n"); cat("\n")
+cat("\n"); cat("\n")
+
+vlabelLength <- flextable(data.frame(matrix(c('80 or less character', '81 to 100 character', '101-150 character', '151 + character', 'No issue', 'Truncated in STATA', 'Better to reduce the length','Recommended to reduce the length'), ncol = 2, byrow = F)))
+
+
+
+vlabelLength <- set_header_labels(vlabelLength, X1 = "Variable label length", X2 = "Issues") %>% 
+                theme_box() %>% 
+                color(color = "black", part = "all") %>% 
+                width(width = 3.25)
+vlabelLength
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+
+v_number  <- which (as.numeric(nchar (unique(var_info$label))) %in% c(81:100))      #lenth between 81 and 100
+seri_col <- paste(v_number, varName[v_number], sep = ' :');
+
+nv_col <- rep('',length(seri_col)); su_col <- rep('KO/SN',length(seri_col))
+
+tab1      <- data.frame(matrix(cbind(seri_col, unique(var_info$label)[v_number], 
+                        as.numeric(nchar(unique(var_info$label)[v_number])), su_col, nv_col, nv_col ), ncol = 6))
+colnames (tab1) <- c('Serial: Name', 'Variable label', 'Length', 'Suggestion', 'Response', 'Status' )
+
+a <- ifelse (length (seri_col) > 0,  'A list of variables with label of length between 80 and 99 characters is presented in the table below. The labels will be truncated while saving the data in STATA (.dta). format', 'None of the variables has label with length between 80 and 99 characters.');
+
+cat("\n"); cat("\n")
+cat ("*Variable label length between 81 and 100 characters*")
+cat("\n"); cat("\n")
+cat (a)
+
+cat("\n"); cat("\n")
+theme_box(flexPrintFun(tab1))
+cat("\n"); cat("\n")
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+v_number  <- which (as.numeric(nchar (unique(var_info$label))) %in% c(101:150))
+seri_col <- paste(v_number, varName[v_number], sep = ' :');
+nv_col <- rep('',length(seri_col)); su_col <- rep('KO/SN',length(seri_col))
+
+tab1      <- data.frame(matrix(cbind(seri_col, unique(var_info$label)[v_number], 
+                        as.numeric(nchar(unique(var_info$label)[v_number])), su_col, nv_col, nv_col ), ncol = 6))
+colnames (tab1) <- c('Serial: Name', 'Variable label', 'Length', 'Suggestion', 'Response', 'Status' )
+
+
+a <- ifelse (length (seri_col) > 0,  'A list of variables with label of length between 101 and 150 characters is presented in the table below. These variable labels will be truncated while saving the data in STATA (.dta) format. The  variable labels are reasonably long and better to replace with relatively shorter labels.', 'None of the variables has label with length between 101 and 150 characters.');
+
+cat("\n"); cat("\n")
+cat ("*Variable label length between 101 and 150 characters*")
+cat("\n"); cat("\n")
+cat (a)
+
+cat("\n"); cat("\n")
+theme_box(flexPrintFun(tab1))
+cat("\n"); cat("\n")
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+v_number  <- which (as.numeric(nchar (unique(var_info$label)))> 150)      #varible label length larger than 150
+seri_col <- paste(v_number, varName[v_number], sep = ' :');
+nv_col <- rep('',length(seri_col)); su_col <- rep('KO/SN',length(seri_col))
+
+tab1  <- data.frame(matrix(cbind(seri_col, unique(var_info$label)[v_number], 
+                        as.numeric(nchar(unique(var_info$label)[v_number])), su_col, nv_col, nv_col ), ncol = 6))
+colnames (tab1) <- c('Serial: Name', 'Variable label', 'Length', 'Suggestion', 'Response', 'Status' )
+
+a <- ifelse (length (seri_col) > 0,  'A list of variables with label of length 150 characters or more is presented in the table below. These variable labels will be truncated while saving the data in STATA (.dta) format. The variable labels are indeed long and recommended to replace with relatively shorter ones.', 'None of the variables has label of length over 151 characters.');
+
+cat("\n"); cat("\n")
+cat ("*Variable label length of 151 or more characters*")
+cat("\n"); cat("\n")
+cat (a)
+
+cat("\n"); cat("\n")
+theme_box(flexPrintFun(tab1))
+cat("\n"); cat("\n")
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+####################################################################################################
+################                Variable label spell  check        #################################
+####################################################################################################
+
+flexPrintFun <- function(x){
+  flextable(x) %>%
+    width(j=1, width = 1.00) %>%
+    width(j=2, width = 2.00) %>%
+    width(j=3, width = 0.75) %>%
+    width(j=4, width = 0.75) %>%
+    width(j=5, width = 0.75) %>%
+    width(j=6, width = 0.50) %>%
+    hrule(rule="auto", part="all") %>%
+    fontsize(part="header", size=8) %>%
+    fontsize(part="body", size=8) 
+}
+
+misspell_varLabel <- matrix (NA, ncol = 1, nrow = length (varLabel))                                       # Create a container to store misspelled variable label
+for (i in 1: length(varLabel)) {                                                                           # For every element in variable label.
+  check <- as.matrix(spell_check_text(as.character(varLabel[i]), lang = "en_GB", ignore = character()))    # Check spelling according to US English
+  check <- ifelse (nrow(check) ==0,  NA, paste(unlist(check[,1]), collapse =", "))                         # If there is/are misspelled word(s), joint each words by ', '
+  lengt <- nchar(str_trim(str_extract(check, "([:lower:]|[:space:]){2,}")))                                # Filter :Two consecutive characters are lower character or a space
+  misspell_varLabel[i] <- ifelse (lengt == 0, NA, check)                                                   # Assign
+}                                                                                                          # 
+posi <- which(complete.cases(misspell_varLabel))                                                           # Find the position
+
+seri_col <- paste(posi, varName[posi], sep = ': ');
+nv_col <- rep('',length(seri_col)); su_col <- rep('KO/SN',length(seri_col))
+
+tab1 <- data.frame(matrix(cbind( seri_col, varLabel[posi], misspell_varLabel[posi], su_col, nv_col, nv_col),ncol = 6))
+colnames (tab1) <- c('Serial: Name',   'Variable label', 'Wrong spelling','Suggestion', 'Response', 'Status' )
+
+a <- ifelse (length (nv_col) > 0,  'The table below presents a list of variables those have at least one possible spelling mistakes in the variable label.', 'None of the variable labels has a spelling mistake.');
+
+cat("\n"); cat("\n")
+cat("*4.2 Spelling check in the variable label:*")
+
+cat("\n"); cat("\n")
+cat (a)
+
+cat("\n"); cat("\n")
+# theme_box(flexPrintFun(tab1))
+
+theme_box(flexPrintFun( data.frame(sapply(tab1, as.character)) ))  
+cat("\n"); cat("\n")
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+####################################################################################################
+################                Value label length check           #################################
+####################################################################################################
+
+flexPrintFun <- function(x){
+  flextable(x) %>%
+    width(j=1, width = 1.00) %>%
+    width(j=2, width = 1.75) %>%
+    width(j=3, width = 1.00) %>%
+    width(j=4, width = 0.75) %>%
+    width(j=5, width = 0.75) %>%
+    width(j=6, width = 0.50) %>%
+    hrule(rule="auto", part="all") %>%
+    fontsize(part="header", size=8) %>%
+    fontsize(part="body", size=8) 
+}
+
+longest_valLabel <- matrix (NA, ncol = 1, nrow = length (varLabel))                 #Create a container(1 Dimension) to store Longest value label in each variable
+for (i in 1: length(varLabel)) {
+  lab <- subset (var_info, var_info$label == varLabel[i])$value_labels              #Find each value label, i.e. separate every value label into one variable.
+  longest_valLabel[i] <- ifelse ( max(nchar (lab)-4) < 25, NA, unlist(lab[unique(which (nchar(lab)== max(nchar(lab))))])) # if longest value label bigger                                                                                        #than a threshold(here is 25+4), extract the correspoding value label
+}
+posi <- which(complete.cases(longest_valLabel))
+
+seri_col <- paste(posi, varName[posi], sep = ': ');
+su_col <- rep('KO/SN',length(posi)); nv_col <- rep('',length(posi))
+long_value_label  <- data.frame(matrix(cbind( seri_col, varLabel[posi], longest_valLabel[posi], su_col, nv_col, nv_col),ncol = 6))        
+colnames (long_value_label) <- c('Serial: Name', 'Variable label', 'Long value label', 'Suggestion', 'Response', 'Status' )
+
+a <- ifelse (length (seri_col) > 0,  'The table presents a list of variables having at least one of the value labels with 25 or more characters.', 'None of the variables had any value label with 25 or more characters.');
+
+cat("\n"); cat("\n")
+cat("*5.1 Value label length check:*")
+cat("\n"); cat("\n")
+cat(" Longer value labels sometimes create problems for presenting data using tables and figures. Better to use shorter value labels, when possible. ")
+cat (a)
+cat("\n"); cat("\n")
+# theme_box(flexPrintFun (long_value_label))
+
+theme_box(flexPrintFun( data.frame(sapply(long_value_label, as.character)) ))
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+####################################################################################################
+################                Value label spell  check           ################################# where is variable label spell check
+####################################################################################################
+
+cat("\n"); cat("\n")
+
+
+
+misspell_word <-  matrix (NA, ncol = 1, nrow = length (varLabel))                                          # Create container for misspelling words
+misspelling_ori_text = matrix (NA, ncol = 1, nrow = length (varLabel))                                     # Create container for misspelling varlabels
+for (i in 1: length(varLabel)) {
+  lab <- paste(unlist(subset (var_info, var_info$label == varLabel[i])$value_labels))                      # Find each value label, i.e. separate every value label into one variable
+  check <- spell_check_text(lab, lang = "en-US")                                                           # return a dictionary conposes {misspelled word, position}
+  misspell_word[i]  <- ifelse (nrow(check) ==0,  NA, paste(unlist(check[,1]) , collapse =", "))            # If there is a misspelled word combine the misword with', '                     
+  misspelling_ori_text[i]  <- ifelse (nrow(check) ==0,  NA, paste(lab[unlist(check[,2])], collapse =", ")) # Find the corresponding value label                                                                                                      
+}
+posi <-  which(complete.cases(misspell_word))                                                              # Extract position from the misspell_word  container
+posi <- posi[as.character(str_extract_all(misspell_word[posi], '\\b[A-Z]+\\b'))=="character(0)"]
+
+wrong_spell_word_col <- misspell_word[posi]
+wrong_spell_ori_col <- misspelling_ori_text[posi]
+
+su_col <- rep('KO/SN', length(posi))
+seri_col <- paste(posi, varName[posi], sep = ' :');
+wrong_spell_col <- paste(wrong_spell_ori_col, wrong_spell_word_col, sep = ': ');
+
+nv_col <- rep('',  length(posi))
+tab1  <- data.frame(matrix(cbind( seri_col, varLabel[as.numeric(posi)], wrong_spell_col, su_col, nv_col, nv_col),ncol = 6))
+tab1 <- subset (tab1, as.character(str_extract_all(tab1[,3], '\\b[A-Z]+\\b'))=="character(0)")
+
+colnames (tab1) <- c('Serial: Name', 'Variable label', 'Wrong Spell', 'Suggestion', 'Response', 'Status' )
+
+a <- ifelse (length (posi) > 0,  'The table shows the variables having at least one of the value labels with possible spelling mistakes.', 'None of the variables had value labels with spelling mistake.');
+
+cat("\n"); cat("\n")
+cat( "*5.2 Spelling check in value label:*")
+cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+theme_box(flexPrintFun( data.frame(sapply(tab1, as.character)) ))  
+
+```
+
+
+
+
+

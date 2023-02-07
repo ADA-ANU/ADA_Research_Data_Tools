@@ -1,0 +1,679 @@
+---
+title: "ADA Panel Data Confidentialisation"
+author: " Project: [Project name]  \nDepositor: [firstname lastname]  \nArchivist:[firstname lastname]  \n`r format (Sys.time(), format='%d-%b-%Y')`"
+
+output: word_document
+---
+<!-- For different data format: -->
+<!-- date: "`r format (Sys.time(), format='%d-%b-%Y')`"  : 13-Jan-2023 --> 
+<!-- date: "`r format (Sys.time(), format='%Y-%m-%d')``" : 2023-01-13 -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE, message = FALSE,comment=NA,results="asis")#results='asis'markup
+library (haven);             # Imports and export SPSS (.sav) data
+library (labelled);          # Calls value label, variable label and other information of the data
+library (tidyverse);         # Managing data files with a better representation  
+library (dplyr)              # Managing the functions using pipes %>%
+library (sjlabelled)         # Supports 'rename_at', 'var_labels' and 'add_value_labels' functions
+# library (Hmisc)
+library(foreign)
+library(car)
+library(reshape2)
+library(gmodels)
+library(flextable)
+# library('plyr')
+library(epiDisplay)
+
+source("./Lib/DPtool.R")
+
+source("./Lib/linaconf.R")
+
+
+```
+
+## 1. Abstract
+
+-   For data produced using a panel design, ADA applies the following additional deidentification process to decrease the risk of identification through linking responses across data using panel respondents.
+
+-   The output produced below reports the k-anonymity (k=3) performed on the data, achieved by (a) classifying combinations of demographic variables with fewer than four responses as unique, and (b) recoding specific individual responses as missing to suppress each of those unique combinations. To limit the number of unique combinations to deal with, only four demographic variables will be retained in the data.
+
+-   Restricted data handling: Any demographic variables removed in the above can be made available in a second data file with highly restricted access conditions. The full responses for the suppressed demographics will also be published in the restricted version.
+
+## 2. Included demographics
+
+Only four of the following demographic variables can be included in the general access data files:
+
+-   Gender
+
+-   Age group,
+
+-   Education,
+
+-   Income
+
+-   State
+
+-   Country of birth
+
+Additional demographic variables would require too much aggregation or suppression. This syntax is designed to confidentialise four demographic variables only.
+
+ADA will also remove all other potentially identifying variables from the general release version of the data file, consistent with our standard risk assessment process.
+
+
+
+## 3. Confidentialisation
+
+In this section, we will show how to confidentialise panel data step by step.
+
+### a. First, age is categorized into seven categories, and gender is recoded to include only male and female (other categories are recoded as missing).
+
+This is completed during the initial data cleaning process. Categories are collapsed to protect sensitive and low-frequency categories. The complete data will be available in the restricted version of the data.
+
+Low-frequency categories are recoded as missing to ensure they cannot be identified. It is sometimes not sufficient to code those responses as 'other' or similar as they may still be unique enough as to be identifiable.
+
+```{r}
+# # Please change the coresponding gender eductation, age, state original varibale name, and set the recoded variable name here
+
+
+#####################   argparse template################################################## 
+# file_path <- ''     #sav data to confidentialise
+# 
+# p_gender_name_ori <- ''                      #gender variable name in the original data
+# p_gender_name <- 'p_gender_sdc'                           #gender variable name saving to the confidentialised data
+# 
+# p_age_group_name_ori <- ""                #age group variable name in the original data
+# p_age_group_name <- "p_age_group_sdc"                     #age group variable name saving to the confidentialised data
+# 
+# p_education_name_ori <- ""                #education level variable name in the original data
+# p_education_name <- "p_education_sdc"                     #education level variable name saving to the confidentialised data
+#   
+# p_state_name_ori <- ""                        #state variable name in the original data
+# p_state_name <- "p_state_sdc"                             #state variable name saving to the confidentialised data
+# 
+# missing_value_in_original <- c(-99:-1,90:99,NA)           #recode 'refuse, unknown,don't know, unable to establish, invalid,other' responses to argpase@missing_label
+# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)    #as above, but in LinA panel data, 'other' somehow was recoded 3 May need append 3 in the end.
+# missing_value_in_original_education <- c(-99:-1,90:99,NA) #as above, but in social cohesion data, 'other' somehow was recoded as 11.
+# missing_value_in_original_age <- missing_value_in_original
+# missing_value_in_original_state <- missing_value_in_original
+
+# missing_value <- -97                                      #confidentialised value that save to the confidentialised data
+# missing_label <- 'Missing' #Refused/Unknow                #confidentialised value name that save to the confidentialised data
+# max_iteration <- 5                                        #the number of the iterations that do the k-anonymity
+
+
+# rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori)
+#                                                           # variable name that will be removed in the confidentialised data. No need to change basically
+# save_spss_filepath <- './.sav'  # Path to save confidentialised data.
+# save_csv_filepath <- './.csv'
+# save_sas_filepath <- ''
+# save_dta_filepath <- ''
+
+
+
+########################################################## LIna 43
+# 
+# file_path <- 'Z:/assda/publish/ANU/Archivists/Weifan/ANUpoll data/ANUPoll 43 100007/02_ANUPoll_43_Data_File_100007.sav'     #sav data to confidentialise
+# 
+# p_gender_name_ori <- 'gender_con'                      #gender variable name in the original data
+# p_gender_name <- 'p_gender_sdc'                           #gender variable name saving to the confidentialised data
+# 
+# p_age_group_name_ori <- "p_ADA_age_group"                #age group variable name in the original data
+# p_age_group_name <- "p_age_group_sdc"                     #age group variable name saving to the confidentialised data
+# 
+# p_education_name_ori <- "d_education"                #education level variable name in the original data
+# p_education_name <- "p_education_sdc"                     #education level variable name saving to the confidentialised data
+# 
+# p_state_name_ori <- "p_state"                        #state variable name in the original data
+# p_state_name <- "p_state_sdc"                             #state variable name saving to the confidentialised data
+# 
+# missing_value_in_original <- c(-99:-1,90:99,NA)           #recode 'refuse, unknown,don't know, unable to establish, invalid,other' responses to argpase@missing_label
+# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)    #as above, but in LinA panel data, 'other' somehow was recoded 3 May need append 3 in the end.
+# missing_value_in_original_education <- c(-99:-1,90:99,NA) #as above, but in social cohesion data, 'other' somehow was recoded as 11.
+# missing_value_in_original_age <- missing_value_in_original
+# missing_value_in_original_state <- missing_value_in_original
+# missing_value <- -97                                      #confidentialised value that save to the confidentialised data
+# missing_label <- 'Missing' #Refused/Unknow                #confidentialised value name that save to the confidentialised data
+# max_iteration <- 3                                       #the number of the iterations that do the k-anonymity
+# rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori)
+#                                                           # variable name that will be removed in the confidentialised data. No need to change basically
+# save_spss_filepath <- './2_Lowey_2020_SPSS_100046_confi.sav'  # Path to save confidentialised data.
+# save_csv_filepath <- './2_Lowey_2020_CSV_100046_confi.csv'
+# save_sas_filepath <- ''
+# save_dta_filepath <- ''
+
+
+################################## cohesion
+
+# file_path <- './Social_Cohesion_Survey_2021_SPSS_100075_RESTRICTED.sav'     #sav data to confidentialise
+# 
+# p_gender_name_ori <- 'dem2'                      #gender variable name in the original data
+# p_gender_name <- 'p_gender_sdc'                           #gender variable name saving to the confidentialised data
+# 
+# p_age_group_name_ori <- "dem1a"                #age group variable name in the original data
+# p_age_group_name <- "p_age_group_sdc"                     #age group variable name saving to the confidentialised data
+# 
+# p_education_name_ori <- "dem10"                #education level variable name in the original data
+# p_education_name <- "p_education_sdc"                     #education level variable name saving to the confidentialised data
+# 
+# p_state_name_ori <- "state"                        #state variable name in the original data
+# p_state_name <- "p_state_sdc"                             #state variable name saving to the confidentialised data
+# 
+# missing_value_in_original <- c(-99:-1,90:99,NA)           #recode 'refuse, unknown,don't know, unable to establish, invalid,other' responses to argpase@missing_label
+# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)    #as above, but in LinA panel data, 'other' somehow was recoded 3 May need append 3 in the end.
+# missing_value_in_original_education <- c(-99:-1,90:99,NA,11) #as above, but in social cohesion data, 'other' somehow was recoded as 11.
+# missing_value_in_original_age <- missing_value_in_original
+# missing_value_in_original_state <- missing_value_in_original
+# 
+# missing_value <- -97                                      #confidentialised value that save to the confidentialised data
+# missing_label <- 'Missing' #Refused/Unknow                #confidentialised value name that save to the confidentialised data
+# max_iteration <- 5                                        #the number of the iterations that do the k-anonymity
+# rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori)
+#                                                           # variable name that will be removed in the confidentialised data. No need to change basically
+# save_spss_filepath <- './2_Lowey_2020_SPSS_100046_confi.sav'  # Path to save confidentialised data.
+# save_csv_filepath <- './2_Lowey_2020_CSV_100046_confi.csv'
+# save_sas_filepath <- ''
+# save_dta_filepath <- ''
+
+
+
+```
+
+```{r}
+
+data <- haven::read_sav(file_path)
+
+
+#We only leave two categories for gender variable (to decrease identification risk recoding -98 and 3 into SYSMIS)
+
+#Note: 1. the program will automatically recode -99 to -1 and 90 to 99 as value of system missing you defined ealier.
+       #2. it may take some additional preprocessing as well. Fro instance, group the numeric age to age group
+      #3. In ANUpoll, ADAID 01459: it aslo had a variable p_further_ed
+      # 4. usually state variable does not have NA values, then We add NA catagory to the State.
+
+####################### Draft for group 2 or 3 values into one category.
+
+
+
+
+##################preprocesssing gender
+data[[p_gender_name]] <- group_values(data[[p_gender_name_ori]],missing_value_in_original_gender,missing_value,missing_label)
+
+
+################### pre processing age
+
+data[[p_age_group_name]]<- group_values(data[[p_age_group_name_ori]],missing_value_in_original_age,missing_value,missing_label)
+
+
+################# pre processing education
+data[[p_education_name]]<- group_values(data[[p_education_name_ori]],missing_value_in_original_education,missing_value,missing_label)
+
+################# pre processing education
+data[[p_state_name]]<- group_values(data[[p_state_name_ori]],missing_value_in_original_state,missing_value,missing_label)
+
+
+
+# May new value label for unknow/refues needed.
+# data <- add_new_value(data,p_state_name_ori,c('Refused'),c(missing_value))
+```
+
+### b.Frequency tables
+
+<!-- move this part under dupilicated star or move duplicate * part on the top. sd a-->
+
+```{r fig.align='center'}
+cat('\n');cat('\n');cat('\n');cat('\n');
+freqtab_g1 <- tab1(labelled::to_factor(data[[p_gender_name]]) ,graph = F)
+freqtab_g1$first.line <- 'Frequency table for gender'
+cat('\n');cat('\n') 
+knitr::kable(freqtab_g1$output.table,caption = freqtab_g1$first.line,align = 'c') 
+
+freqtab_e1 <- tab1(labelled::to_factor(data[[p_education_name]]) ,graph = F)
+freqtab_e1$first.line <- 'Frequency table for education level'
+cat('\n');cat('\n')
+knitr::kable(freqtab_e1$output.table ,caption = freqtab_e1$first.line,align = 'c' )
+
+
+freqtab_a1 <- tab1(labelled::to_factor(data[[p_age_group_name]]) ,graph = F)
+freqtab_a1$first.line <- 'Frequency table for age group'
+cat('\n');cat('\n')
+knitr::kable(freqtab_a1$output.table ,caption=freqtab_a1$first.line,align = 'c')
+
+freqtab_s1 <- tab1(labelled::to_factor(data[[p_state_name]]) ,graph = F)
+freqtab_s1$first.line <- 'Frequency table for state'
+cat('\n');cat('\n')
+knitr::kable(freqtab_s1$output.table,caption = freqtab_s1$first.line,align = 'c')
+
+# data.frame(freqtab1[2])
+```
+
+### c. Identify unique combinations of responses across the key demographic variables
+
+First we replace missing values with an asterisk (*). We then concatenate responses across the four demographic variables to identify combinations of responses that are unique (i.e., shared by fewer than four respondents).* **Unique Combinations**\* of all four or any three demographics are flagged.
+
+Missing data is coded as an asterisk for ease of identifying missing data in the summary tables.
+
+```{r include=FALSE}
+p_gender_string <- as.character(data[[p_gender_name]])
+p_gender_string[which(p_gender_string==missing_value)] <- '*'
+
+p_state_string <- as.character(data[[p_state_name]])
+p_state_string[which(p_state_string==missing_value)] <- '*'
+
+p_education_string<- as.character(data[[p_education_name]])
+p_education_string[which(p_education_string==missing_value)] <- '*'
+
+p_age_group2_string<- as.character(data[[p_age_group_name]])
+p_age_group2_string[which(p_age_group2_string==missing_value)] <- '*'
+
+
+ftable(table(labelled::to_factor(data[[p_gender_name]]),p_gender_string ))
+cat('\n')
+ftable(table( labelled::to_factor(data[[p_state_name]]),p_state_string))
+ftable(table( labelled::to_factor(data[[p_education_name]]),p_education_string))
+ftable(table( labelled::to_factor(data[[p_age_group_name]]),p_age_group2_string))
+
+```
+
+```{r include=FALSE}
+
+
+data_occ <- subset(data,select =  c(p_gender_name,p_education_name,p_age_group_name,p_state_name))
+data_occ$uniques4<- paste0(p_gender_string,p_education_string,p_age_group2_string,p_state_string)
+data_occ_freq <- data_occ %>%  # coresponding to
+  group_by(uniques4) %>%
+  dplyr::summarize(count=n())
+# data_occ_freq
+number_occ_4 <- merge(data_occ,data_occ_freq,by =c('uniques4'))
+occ_table <- tab1(number_occ_4$count,graph = FALSE);
+occ_table$first.line <- "Frequncy table for count of conbination of ***gender, education, age, state*** \n"
+occ_table
+cat('\n');cat('\n');
+k3_4 <- rep(0,nrow(number_occ_4))
+k3_4[which(number_occ_4$count<3)] <- 1
+k3_4[which(number_occ_4[[p_gender_name]]==missing_value)] <- 0
+k3_4[which(number_occ_4[[p_state_name]]==missing_value)] <- 0
+k3_4[which(number_occ_4[[p_age_group_name]]==missing_value)] <- 0
+k3_4[which(number_occ_4[[p_education_name]]==missing_value)] <- 0
+ftable(k3_4)
+
+
+cat("\n");cat("\n");cat("\n")
+data_occ <- subset(data,select =  c(p_gender_name,p_education_name,p_age_group_name))
+data_occ$uniques3a<- paste0(p_gender_string,p_education_string,p_age_group2_string)
+data_occ_freq <- data_occ %>%  # coresponding to
+  group_by(uniques3a) %>%
+  dplyr::summarize(count=n())
+number_occ_3a <- merge(data_occ,data_occ_freq,by =c('uniques3a') )
+tab1(number_occ_3a$count,graph = FALSE);cat('\n');cat('\n')
+
+k3_3a <- rep(0,nrow(number_occ_3a))
+k3_3a[which(number_occ_3a$count<3)] <- 1
+
+k3_3a[which(number_occ_3a[[p_gender_name]]==missing_value)] <- 0
+k3_3a[which(number_occ_3a[[p_age_group_name]]==missing_value)] <- 0
+k3_3a[which(number_occ_3a[[p_education_name]]==missing_value)] <- 0
+ftable(k3_3a)
+cat("\n");cat("\n");cat("\n")
+
+
+data_occ <- subset(data,select =  c(p_gender_name,p_education_name,p_state_name))
+data_occ$uniques3b<- paste0(p_gender_string,p_education_string,p_state_string)
+data_occ_freq <- data_occ %>%  # coresponding to
+  group_by(uniques3b) %>%
+  dplyr::summarize(count=n())
+# data_occ_freq
+number_occ_3b <- merge(data_occ,data_occ_freq,by =c('uniques3b') )
+tab1(number_occ_3b$count,graph = FALSE);cat('\n');cat('\n');
+k3_3b <- rep(0,nrow(number_occ_3b))
+k3_3b[which(number_occ_3b$count<3)] <- 1
+k3_3b[which(number_occ_3b[[p_gender_name]]==missing_value)] <- 0
+k3_3b[which(number_occ_3b[[p_state_name]]==missing_value)] <- 0
+k3_3b[which(number_occ_3b[[p_education_name]]==missing_value)] <- 0
+ftable(k3_3b)
+cat("\n");cat("\n");cat("\n")
+
+
+data_occ <- subset(data,select =  c(p_gender_name,p_age_group_name,p_state_name))
+data_occ$uniques3c<- paste0(p_gender_string,p_age_group2_string,p_state_string)
+data_occ_freq <- data_occ %>%  # coresponding to
+  group_by(uniques3c) %>%
+  dplyr::summarize(count=n())
+# data_occ_freq
+number_occ_3c <- merge(data_occ,data_occ_freq,by =c('uniques3c') )
+tab1(number_occ_3c$count,graph = FALSE);cat('\n');cat('\n')
+
+k3_3c <- rep(0,nrow(number_occ_3c))
+k3_3c[which(number_occ_3c$count<3)] <- 1
+k3_3c[which(number_occ_3c[[p_gender_name]]==missing_value)] <- 0
+k3_3c[which(number_occ_3c[[p_state_name]]==missing_value)] <- 0
+k3_3c[which(number_occ_3c[[p_age_group_name]]==missing_value)] <- 0
+ftable(k3_3c)
+cat("\n");cat("\n");cat("\n")
+
+data_occ <- subset(data,select =  c(p_education_name,p_age_group_name,p_state_name))
+data_occ$uniques3d<- paste0(p_education_string,p_age_group2_string,p_state_string)
+data_occ_freq <- data_occ %>%  # coresponding to
+  group_by(uniques3d) %>%
+  dplyr::summarize(count=n())
+# data_occ_freq
+number_occ_3d <- merge(data_occ,data_occ_freq,by =c('uniques3d') )
+tab1(number_occ_3d$count,graph = FALSE)
+cat('\n')
+k3_3d <- rep(0,nrow(number_occ_3d))
+k3_3d[which(number_occ_3d$count<3)] <- 1
+k3_3d[which(number_occ_3d[[p_education_name]]==missing_value)] <- 0
+k3_3d[which(number_occ_3d[[p_state_name]]==missing_value)] <- 0
+k3_3d[which(number_occ_3d[[p_age_group_name]]==missing_value)] <- 0
+ftable(k3_3d)
+cat("\n");cat("\n");cat("\n")
+```
+
+### d. Protecting demographic variables by suppressing values (in the duplicate variables)
+
+Unique combinations are suppressed by replacing one response in each unique combination of responses with missing data (i.e., an asterisk).
+The algorithm will suppress a given demographic value if the combination of the other three demographics is more frequent that any other combination of three. For example, a respondent’s education response will be suppressed if their gender/age/state combination appears more often in the data relative to other combinations of their demographics (gender/education/state, gender/education/age, education/age/state). In this example, the education response carries the greatest risk of identification so is selected for suppression. In this example, gender/age/state is a commonly occurring combination, therefore education is the outlier, or the most unique of the four demographics for that respondent. Therefore, education carries the greatest risk of identification so is selected for suppression.
+
+We repeat this process iteratively until no additional unique combinations are detected.
+
+```{r results='markup'}
+data_con <- data
+for (i in 1:max_iteration) {
+  cat('#### the ',i,' iteration starts: \n')
+  results <- conf_LinA_short(data_con,p_gender_name,p_age_group_name,p_education_name,p_state_name,NA_value=missing_value)
+  data_con <- results$data_con
+  if (!results$flag) {#if no need for iterations
+    cat('\n\n #### ')
+    cat('The confidentiality process was completed in  ',i-1,' of iterations ####')
+    break
+  }
+  cat('\n')
+}
+```
+
+## 3. Results and Comparison
+
+In this section, we compare the frequency of responses for each variable before and after suppression so users can examine the distribution of missing data.
+
+There are 4 frequency tables that recorded how many values in each variable before and after the suppression. Table 1 shows combinations of gender, education, age, and state and indicates how many of those combinations were suppressed.
+
+### 3.1. Gender
+
+From the table 1.2
+
+***Table 3.1.1 Every combination of responses and the number (count) of each where the response for Gender will be replaced with missing data.***
+
+```{r}
+flexPrintFun <- function(x){                        #Function that print table with 2 columns
+  flextable(x) %>%
+    width(j=1, width = 1.00) %>%
+    width(j=1, width = 1.00) %>%
+    width(j=1, width = 1.00) %>%
+    width(j=1, width = 1.00) %>%
+    width(j=1, width = 1.00) %>%
+    hrule(rule="auto", part="all") %>%
+    fontsize(part="header", size=8) %>%
+    fontsize(part="body", size=8) 
+}
+
+
+
+list1 <- data[[p_gender_name]]
+list2 <- data_con[[p_gender_name]]
+posi <- which((list1 == list2)==FALSE )
+
+data_t <-  data[posi,][c(p_gender_name,p_education_name,p_age_group_name,p_state_name)]
+# data_t <-  data_string[posi,][c(p_gender_string,p_education_string,p_age_group2_string,p_state_string)]
+
+
+names(data_t) <- c('p_gender_name','p_education_name','p_age_group_name','p_state_name')
+
+freq_t <- data_t %>% group_by(p_gender_name,p_education_name,p_age_group_name,p_state_name) %>% summarise(count=n()) %>% as.data.frame() %>% mutate_all(as.character)
+names(freq_t) <- c('gender','education','age','state','count')
+freq_t[freq_t==missing_value]='*'
+# cat('there are total ',sum(freq_t$count),' of gender has been suppressed.')
+theme_box(flexPrintFun(freq_t ))
+cat("\n");cat("\n");cat("\n");
+```
+
+***Table 3.1.2: Frequency table for Gender before and after suppression***
+
+```{r echo=FALSE,results="markup"}
+# flexPrintFun <- function(x){                        #Function that print table with 2 columns
+#   flextable(x) %>%
+#     width(j=1, width = 3.00) %>%
+#     width(j=2, width = 1.00) %>%
+#     width(j=3, width = 1.00) %>%
+#     width(j=3, width = 1.00) %>%
+#     hrule(rule="auto", part="all") %>%
+#     fontsize(part="header", size=8) %>%
+#     fontsize(part="body", size=8) 
+# }
+
+
+freqtab_g2 <- tab1(labelled::to_factor(data_con[[p_gender_name]]) ,graph = F)
+# rname <- c( paste(names(attributes( data_con[[p_gender_name]])$labels),attributes( data_con[[p_gender_name]])$labels,sep =  ': '), "total")
+# rname <- rownames( freqtab_g2$output.table)
+# rname <- c(attributes( data_con[[p_gender_name]])$labels )
+# ,names(attributes( data_con[[p_gender_name]])$labels)
+
+value <- c(unname(attributes( data_con[[p_gender_name]])$labels),'')
+value_label <-c( names(attributes( data_con[[p_gender_name]])$labels),'total')
+freq_con <- data.frame(cbind(value,value_label,data.frame(freqtab_g1$output.table)$Frequency,data.frame(freqtab_g2$output.table)$Frequency ,data.frame(freqtab_g2$output.table)$Frequency-data.frame(freqtab_g1$output.table)$Frequency))
+colnames(freq_con) <- c('Value', 'Value Label','#before','#after',"Difference")
+
+
+# rownames(freq_con) <- rname
+
+knitr::kable(freq_con,caption = "",align = 'c')
+```
+
+
+```{r echo=FALSE}
+
+
+cat('\n ')
+
+if (as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])==1){
+  cat("In sum, ",as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])," gender response (",round(as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])*100/as.integer(freq_con[['#before']][nrow(freq_con)]),3),"%) were replaced with missing data to remove unique combinations of demographic variables.")
+# theme_box(flexPrintFun(freq_con ))
+}else{
+  cat("In sum, ",as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])," gender responses (",round(as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])*100/as.integer(freq_con[['#before']][nrow(freq_con)]),3),"%) were replaced with missing data to remove unique combinations of demographic variables.")  
+}
+
+cat('\n')
+
+```
+
+### 3.2. Education
+
+***Table 3.2.1: Every combination of k\<3 demographic responses and the number (count) of each combination, and setting these Education to missing value.***
+
+```{r}
+list1 <- data[[p_education_name]]
+list2 <- data_con[[p_education_name]]
+posi <- which((list1 == list2)==FALSE )
+
+data_t <-  data[posi,][c(p_gender_name,p_education_name,p_age_group_name,p_state_name)]
+names(data_t) <- c('p_gender_name','p_education_name','p_age_group_name','p_state_name')
+
+freq_t <- data_t %>% group_by(p_gender_name,p_education_name,p_age_group_name,p_state_name) %>% summarise(count=n())%>% as.data.frame() %>% mutate_all(as.character)
+names(freq_t) <- c('gender','education','age','state','count')
+freq_t[freq_t==missing_value]='*'
+theme_box(flexPrintFun(freq_t ))
+```
+
+***Table 3.2.1: Frequency table shows education before and after suppression***
+
+```{r echo=FALSE}
+freqtab_e2 <- tab1(labelled::to_factor(data_con[[p_education_name]]) ,graph = F)
+# rname <- c( paste(names(attributes( data_con[[p_education_name]])$labels),attributes( data_con[[p_education_name]])$labels,sep =  ': '), "total")
+# freq_con <- data.frame(cbind(rname,data.frame(freqtab_e1$output.table)$Frequency,data.frame(freqtab_e2$output.table)$Frequency ,data.frame(freqtab_e2$output.table)$Frequency-data.frame(freqtab_e1$output.table)$Frequency))
+# colnames(freq_con) <- c('value label','Frequency before','After',"diff")
+# cat("*Table 2: Frequency table shows education before and after suppression*")
+# theme_box(flexPrintFun(freq_con ))
+
+value <- c(unname(attributes( data_con[[p_education_name]])$labels),'')
+value_label <-c( names(attributes( data_con[[p_education_name]])$labels),'total')
+freq_con <- data.frame(cbind(value,value_label,data.frame(freqtab_e1$output.table)$Frequency,data.frame(freqtab_e2$output.table)$Frequency ,data.frame(freqtab_e2$output.table)$Frequency-data.frame(freqtab_e1$output.table)$Frequency))
+colnames(freq_con) <- c('Value', 'Value Label','#before','#after',"Difference")
+
+knitr::kable(freq_con,caption = "")
+```
+
+
+```{r echo=FALSE}
+cat('\n')
+if (as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])==1){
+  cat("In sum, ",as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])," education response (",round(as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])*100/as.integer(freq_con[['#before']][nrow(freq_con)]),3),"%) were replaced with missing data to remove unique combinations of demographic variables.")
+# theme_box(flexPrintFun(freq_con ))
+
+
+}else{
+  cat("In sum, ",as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])," education responses (",round(as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])*100/as.integer(freq_con[['#before']][nrow(freq_con)]),3),"%) were replaced with missing data to remove unique combinations of demographic variables.")
+# theme_box(flexPrintFun(freq_con ))
+
+}
+
+cat('\n')
+
+```
+
+### 3.3. Age group
+
+***Table 3.3.1: Every combination of k\<3 demographic responses and the number (count) of each combination, and setting these Age group to missing value.***
+
+```{r}
+list1 <- data[[p_age_group_name]]
+list2 <- data_con[[p_age_group_name]]
+posi <- which((list1 == list2)==FALSE )
+
+data_t <-  data[posi,][c(p_gender_name,p_education_name,p_age_group_name,p_state_name)]
+names(data_t) <- c('p_gender_name','p_education_name','p_age_group_name','p_state_name')
+
+freq_t <- data_t %>% group_by(p_gender_name,p_education_name,p_age_group_name,p_state_name) %>% summarise(count=n())%>% as.data.frame() %>% mutate_all(as.character)
+names(freq_t) <- c('gender','education','age','state','count')
+freq_t[freq_t==missing_value]='*'
+theme_box(flexPrintFun(freq_t ))
+```
+
+***Table 3.3.2: Frequency table shows age group before and after suppression***
+
+```{r echo=FALSE}
+freqtab_a2 <- tab1(labelled::to_factor(data_con[[p_age_group_name]]) ,graph = F)
+# rname <- c( paste(names(attributes( data_con[[p_age_group_name]])$labels),attributes( data_con[[p_age_group_name]])$labels,sep =  ': '), "total")
+# freq_con <- data.frame(cbind(rname,data.frame(freqtab_a1$output.table)$Frequency,data.frame(freqtab_a2$output.table)$Frequency ,data.frame(freqtab_a2$output.table)$Frequency-data.frame(freqtab_a1$output.table)$Frequency))
+# colnames(freq_con) <- c('value label','Frequency before','After',"diff")
+# cat("*Table 2: Frequency table shows age group before and after suppression*")
+# theme_box(flexPrintFun(freq_con ))
+
+value <- c(unname(attributes( data_con[[p_age_group_name]])$labels),'')
+value_label <-c( names(attributes( data_con[[p_age_group_name]])$labels),'total')
+freq_con <- data.frame(cbind(value,value_label,data.frame(freqtab_a1$output.table)$Frequency,data.frame(freqtab_a2$output.table)$Frequency ,data.frame(freqtab_a2$output.table)$Frequency-data.frame(freqtab_a1$output.table)$Frequency))
+colnames(freq_con) <- c('Value', 'Value Label','#before','#after',"Difference")
+
+
+
+knitr::kable(freq_con,caption = "",align = 'c')
+```
+
+
+```{r echo=FALSE}
+cat('\n ')
+
+if (as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])==1){
+  cat("In sum, ",as.integer(freq_con$Difference[which(freq_con$Value==missing_value)]),"age group response (",round(as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])*100/as.integer(freq_con[['#before']][nrow(freq_con)]),3),"%) were replaced with missing data to remove unique combinations of demographic variables.")
+# theme_box(flexPrintFun(freq_con ))
+}else{
+  cat("In sum, ",as.integer(freq_con$Difference[which(freq_con$Value==missing_value)]),"age group responses (",round(as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])*100/as.integer(freq_con[['#before']][nrow(freq_con)]),3),"%) were replaced with missing data to remove unique combinations of demographic variables.")
+# theme_box(flexPrintFun(freq_con ))
+
+}
+cat('\n')
+```
+
+### 3.4. State
+
+***Table 3.4.1: Every combination of k\<3 demographic responses and the number (count) of each combination, and setting these State to missing value.***
+
+```{r}
+list1 <- data[[p_state_name]]
+list2 <- data_con[[p_state_name]]
+posi <- which((list1 == list2)==FALSE )
+
+data_t <-  data[posi,][c(p_gender_name,p_education_name,p_age_group_name,p_state_name)]
+names(data_t) <- c('p_gender_name','p_education_name','p_age_group_name','p_state_name')
+
+freq_t <- data_t %>% group_by(p_gender_name,p_education_name,p_age_group_name,p_state_name) %>% summarise(count=n())%>% as.data.frame() %>% mutate_all(as.character)
+names(freq_t) <- c('gender','education','age','state','count')
+freq_t[freq_t==missing_value]='*'
+theme_box(flexPrintFun(freq_t ))
+
+```
+
+***Table 3.4.1: Frequency table shows state before and after suppression***
+
+```{r echo=FALSE}
+# cat("\n"); cat("\n");
+freqtab_s2 <- tab1(labelled::to_factor(data_con[[p_state_name]]) ,graph = F)
+# rname <- c( paste(names(attributes( data_con[[p_state_name]])$labels),attributes( data_con[[p_state_name]])$labels,sep =  ': '), "total")
+# freq_con <- data.frame(cbind(rname,data.frame(freqtab_s1$output.table)$Frequency,data.frame(freqtab_s2$output.table)$Frequency ,data.frame(freqtab_s2$output.table)$Frequency-data.frame(freqtab_s1$output.table)$Frequency))
+# colnames(freq_con) <- c('value label','Frequency before','After',"diff")
+# cat("**")
+# theme_box(flexPrintFun(freq_con ))
+value <- c(unname(attributes( data_con[[p_state_name]])$labels),'')
+value_label <-c( names(attributes( data_con[[p_state_name]])$labels),'total')
+freq_con <- data.frame(cbind(value,value_label,data.frame(freqtab_s1$output.table)$Frequency,data.frame(freqtab_s2$output.table)$Frequency ,data.frame(freqtab_s2$output.table)$Frequency-data.frame(freqtab_s1$output.table)$Frequency))
+colnames(freq_con) <- c('Value', 'Value Label','#before','#after',"Difference")
+
+
+
+
+knitr::kable(freq_con,caption = "",align = 'c')
+```
+
+
+```{r echo=FALSE}
+cat('\n ')
+if (as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])==1){
+  cat("In sum, ",as.integer(freq_con$Difference[which(freq_con$Value==missing_value)]),"state response (",round(as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])*100/as.integer(freq_con[['#before']][nrow(freq_con)]),3),"%) were replaced with missing data to remove unique combinations of demographic variables.")
+# theme_box(flexPrintFun(freq_con ))
+
+
+}else{
+  
+  cat("In sum, ",as.integer(freq_con$Difference[which(freq_con$Value==missing_value)]),"state responses (",round(as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])*100/as.integer(freq_con[['#before']][nrow(freq_con)]),3),"%) were replaced with missing data to remove unique combinations of demographic variables.")
+
+}
+
+
+cat('\n')
+```
+
+## 4. Export de-identified data files for general release
+
+Data files with suppressed demographic data as described above will be exported and saved to the current working directory for distribution on ADA Dataverse.
+
+```{r}
+
+data_con_save <- data_con[ , -which(names(data_con) %in% rm_var )]
+
+#####################################################################################################################
+#######################   Write data in SPSS (.sav): Archivist may change the name and location #####################
+######################################  ###############################################################################
+
+if (!save_spss_filepath==''){
+  write_spss(data_con_save, save_spss_filepath,drop.na = FALSE)
+}
+
+if (!save_dta_filepath==''){
+  write_dta(data_con_save, save_dta_filepath,drop.na = FALSE,version = 14)
+}
+if (!save_csv_filepath==''){
+  write_csv(data_con_save, save_csv_filepath)
+}
+if (!save_sas_filepath==''){
+  write_sas(data_con_save, save_sas_filepath)
+}
+
+
+```
