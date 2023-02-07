@@ -5,9 +5,9 @@ R Code repository for Data Archivists, this including Data processing and basic 
 
 <!-- PROJECT SHIELDS -->
 ![GitHub repo size](https://img.shields.io/github/languages/code-size/ADA-ANU/ADA_R_Scripts)
-![GitHub license](https://img.shields.io//github/license/ADA-ANU/ADA_R_Scripts)
+![GitHub license](https://img.shields.io/github/license/ADA-ANU/ADA_R_Scripts)
 ![GitHub contributors](https://img.shields.io/github/contributors/ADA-ANU/ADA_R_Scripts)
-![GitHub stars](https://img.shields.io/github/stars/ADA-ANU/ADA_R_Scripts?style=social)
+![GitHub Repo stars](https://img.shields.io/github/stars/ADA-ANU/ADA_R_Scripts?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/ADA-ANU/ADA_R_Scripts?style=social)
 
 
