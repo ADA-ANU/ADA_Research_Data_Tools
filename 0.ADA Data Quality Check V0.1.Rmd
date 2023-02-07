@@ -48,7 +48,7 @@ theme_box(flexPrintFun (data.frame(summ)))
 
 data <- haven::read_sav("./Data/.sav")
 
-conf_var  <- c( 'p_seifa', 'p_gender', 'p_age_group_ADA', 'd_education')
+conf_var  <- c()
 
 var_info  <- look_for(data, details = TRUE) %>%                  #add details about each variable
              lookfor_to_long_format() %>%
