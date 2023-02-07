@@ -4,10 +4,10 @@
 R Code repository for Data Archivists, this including Data processing and basic functions build by R. 
 
 <!-- PROJECT SHIELDS -->
-![GitHub repo size](https://img.shields.io/github/repo-size/ADA-ANU/ADA-R-Lib)
-![GitHub contributors](https://img.shields.io/github/contributors/ADA-ANU/ADA-R-Lib)
-![GitHub stars](https://img.shields.io/github/stars/ADA-ANU/ADA-R-Lib?style=social)
-![GitHub forks](https://img.shields.io/github/forks/ADA-ANU/ADA-R-Lib?style=social)
+![GitHub repo size](https://img.shields.io/github/repo-size/ADA-ANU/ADA_R_Scripts)
+![GitHub contributors](https://img.shields.io/github/contributors/ADA-ANU/ADA_R_Scripts)
+![GitHub stars](https://img.shields.io/github/stars/ADA-ANU/ADA_R_Scripts?style=social)
+![GitHub forks](https://img.shields.io/github/forks/ADA-ANU/ADA_R_Scripts?style=social)
 
 
 <!-- PROJECT LOGO -->
@@ -47,8 +47,7 @@ R Code repository for Data Archivists, this including Data processing and basic 
 - [📝 Release History](#Release-History)
 - [👥 Authors](#authors)
 - [🤝 Contributing](#contributing)
-- [🙏 Acknowledgements](#acknowledgements)
-- [❓ FAQ](#faq)
+
 
 
 
