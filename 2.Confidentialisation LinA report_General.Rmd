@@ -45,25 +45,25 @@ Only four of the following demographic variables can be included in the general 
 
 -   Gender
 
--   Age group,
+-   Age
 
--   Education,
-
--   Income
+-   Education
 
 -   State
 
+-   Income
+
 -   Country of birth
 
-Additional demographic variables would require too much aggregation or suppression. This syntax is designed to confidentialise four demographic variables only.
+Additional demographic variables would require excessive aggregation or suppression. This syntax is designed to confidentialise four demographic variables only.
 
-ADA will also remove all other potentially identifying variables from the general release version of the data file, consistent with our standard risk assessment process.
+ADA will remove all other potentially identifying variables from the general release version of the data file, consistent with our standard risk assessment process. 
 
-
+A more complete version of the data can be released as a RESTRICTED data file with access limited to specific users. Access conditions will be determined by ADA in consultation with the data owner(s).
 
 ## 3. Confidentialisation
 
-In this section, we will show how to confidentialise panel data step by step.
+How will panel data be confidentialised at ADA?
 
 ### a. First, age is categorized into seven categories, and gender is recoded to include only male and female (other categories are recoded as missing).
 
@@ -72,62 +72,61 @@ This is completed during the initial data cleaning process. Categories are colla
 Low-frequency categories are recoded as missing to ensure they cannot be identified. It is sometimes not sufficient to code those responses as 'other' or similar as they may still be unique enough as to be identifiable.
 
 ```{r}
-# # Please change the coresponding gender eductation, age, state original varibale name, and set the recoded variable name here
-
+# # Please enter the original variable names  (for gender, education, age, and state) and name the new deidentified variables that will be produced by this syntax.
 
 #####################   argparse template################################################## 
-# file_path <- ''     #sav data to confidentialise
+# file_path <- ''                                              #destination to save confidentialised data
 # 
-# p_gender_name_ori <- ''                      #gender variable name in the original data
-# p_gender_name <- 'p_gender_sdc'                           #gender variable name saving to the confidentialised data
+# p_gender_name_ori <- ''                                      #gender variable name in the original data
+# p_gender_name <- 'p_gender_sdc'                              #gender variable name saving to the confidentialised data
 # 
-# p_age_group_name_ori <- ""                #age group variable name in the original data
-# p_age_group_name <- "p_age_group_sdc"                     #age group variable name saving to the confidentialised data
+# p_age_group_name_ori <- ""                                   #age group variable name in the original data
+# p_age_group_name <- "p_age_group_sdc"                        #age group variable name saving to the confidentialised data
 # 
-# p_education_name_ori <- ""                #education level variable name in the original data
-# p_education_name <- "p_education_sdc"                     #education level variable name saving to the confidentialised data
+# p_education_name_ori <- ""                                   #education level variable name in the original data
+# p_education_name <- "p_education_sdc"                        #education level variable name saving to the confidentialised data
 #   
-# p_state_name_ori <- ""                        #state variable name in the original data
-# p_state_name <- "p_state_sdc"                             #state variable name saving to the confidentialised data
+# p_state_name_ori <- ""                                       #state variable name in the original data
+# p_state_name <- "p_state_sdc"                                #state variable name saving to the confidentialised data
 # 
 # missing_value_in_original <- c(-99:-1,90:99,NA)           #recode 'refuse, unknown,don't know, unable to establish, invalid,other' responses to argpase@missing_label
-# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)    #as above, but in LinA panel data, 'other' somehow was recoded 3 May need append 3 in the end.
+# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)  #as above, but in LinA panel data, 'other' somehow was recoded 3 May need append 3 in the end.
 # missing_value_in_original_education <- c(-99:-1,90:99,NA) #as above, but in social cohesion data, 'other' somehow was recoded as 11.
 # missing_value_in_original_age <- missing_value_in_original
 # missing_value_in_original_state <- missing_value_in_original
 
-# missing_value <- -97                                      #confidentialised value that save to the confidentialised data
-# missing_label <- 'Missing' #Refused/Unknow                #confidentialised value name that save to the confidentialised data
-# max_iteration <- 5                                        #the number of the iterations that do the k-anonymity
+# missing_value <- -9999                                    #code for all missing and confidentialised values in the confidentialised data
+# missing_label <- 'Missing/Confidentialised'               #label for all missing and confidentialised values in the confidentialised data
+# max_iteration <- 5                                        #maximum number of iterations to detect and suppress unique response combinations
 
 
-# rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori)
-#                                                           # variable name that will be removed in the confidentialised data. No need to change basically
-# save_spss_filepath <- './.sav'  # Path to save confidentialised data.
+# rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori)       #variables removed from confidentialised data
+# save_spss_filepath <- './.sav'   # Path to save confidentialised data.
 # save_csv_filepath <- './.csv'
 # save_sas_filepath <- ''
 # save_dta_filepath <- ''
 
 
-
-########################################################## LIna 43
+###################################################################################################################################################
+########################################################## ANU POll Template ######################################################################
+###################################################################################################################################################
 # 
-# file_path <- 'Z:/assda/publish/ANU/Archivists/Weifan/ANUpoll data/ANUPoll 43 100007/02_ANUPoll_43_Data_File_100007.sav'     #sav data to confidentialise
+# file_path <- 'Z:/assda/publish/ANU/Archivists/Weifan/ANUpoll data/ANUPoll 43 100007/02_ANUPoll_43_Data_File_100007.sav'     #data to confidentialise
 # 
-# p_gender_name_ori <- 'gender_con'                      #gender variable name in the original data
-# p_gender_name <- 'p_gender_sdc'                           #gender variable name saving to the confidentialised data
+# p_gender_name_ori <- 'gender_con'                            #gender variable name in the original data
+# p_gender_name <- 'p_gender_sdc'                              #gender variable name saving to the confidentialised data
 # 
-# p_age_group_name_ori <- "p_ADA_age_group"                #age group variable name in the original data
-# p_age_group_name <- "p_age_group_sdc"                     #age group variable name saving to the confidentialised data
+# p_age_group_name_ori <- "p_ADA_age_group"                    #age group variable name in the original data
+# p_age_group_name <- "p_age_group_sdc"                        #age group variable name saving to the confidentialised data
 # 
-# p_education_name_ori <- "d_education"                #education level variable name in the original data
-# p_education_name <- "p_education_sdc"                     #education level variable name saving to the confidentialised data
+# p_education_name_ori <- "d_education"                        #education level variable name in the original data
+# p_education_name <- "p_education_sdc"                        #education level variable name saving to the confidentialised data
 # 
-# p_state_name_ori <- "p_state"                        #state variable name in the original data
-# p_state_name <- "p_state_sdc"                             #state variable name saving to the confidentialised data
+# p_state_name_ori <- "p_state"                                #state variable name in the original data
+# p_state_name <- "p_state_sdc"                                #state variable name saving to the confidentialised data
 # 
 # missing_value_in_original <- c(-99:-1,90:99,NA)           #recode 'refuse, unknown,don't know, unable to establish, invalid,other' responses to argpase@missing_label
-# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)    #as above, but in LinA panel data, 'other' somehow was recoded 3 May need append 3 in the end.
+# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)  #as above, but in LinA panel data, 'other' somehow was recoded 3 May need append 3 in the end.
 # missing_value_in_original_education <- c(-99:-1,90:99,NA) #as above, but in social cohesion data, 'other' somehow was recoded as 11.
 # missing_value_in_original_age <- missing_value_in_original
 # missing_value_in_original_state <- missing_value_in_original
@@ -185,40 +184,38 @@ data <- haven::read_sav(file_path)
 
 #We only leave two categories for gender variable (to decrease identification risk recoding -98 and 3 into SYSMIS)
 
-#Note: 1. the program will automatically recode -99 to -1 and 90 to 99 as value of system missing you defined ealier.
-       #2. it may take some additional preprocessing as well. Fro instance, group the numeric age to age group
-      #3. In ANUpoll, ADAID 01459: it aslo had a variable p_further_ed
-      # 4. usually state variable does not have NA values, then We add NA catagory to the State.
+#Note 1. the program will automatically recode -99 to -1 and 90 to 99 as system missing.
+#Note 2. preprocessing may be required as well. For instance, group continuous age variable to categorical
+#Note 3. In ANUpoll, ADAID 01459: it also had a variable p_further_ed
+#Note 4. usually state variable does not have NA values, then We add NA catagory to the State.
 
-####################### Draft for group 2 or 3 values into one category.
-
-
+####################### Draft for group 2 or 3 values into one category [codes all defined missing as *].
 
 
-##################preprocesssing gender
+
+
+################## preprocesssing gender
 data[[p_gender_name]] <- group_values(data[[p_gender_name_ori]],missing_value_in_original_gender,missing_value,missing_label)
 
 
-################### pre processing age
+################### preprocessing age
 
 data[[p_age_group_name]]<- group_values(data[[p_age_group_name_ori]],missing_value_in_original_age,missing_value,missing_label)
 
 
-################# pre processing education
+################# preprocessing education
 data[[p_education_name]]<- group_values(data[[p_education_name_ori]],missing_value_in_original_education,missing_value,missing_label)
 
-################# pre processing education
+################# preprocessing state
 data[[p_state_name]]<- group_values(data[[p_state_name_ori]],missing_value_in_original_state,missing_value,missing_label)
 
 
 
-# May new value label for unknow/refues needed.
+# May need new value label for unknown/refused [if there is no missing data at all].
 # data <- add_new_value(data,p_state_name_ori,c('Refused'),c(missing_value))
 ```
 
 ### b.Frequency tables
-
-<!-- move this part under dupilicated star or move duplicate * part on the top. sd a-->
 
 ```{r fig.align='center'}
 cat('\n');cat('\n');cat('\n');cat('\n');
@@ -285,7 +282,7 @@ data_occ_freq <- data_occ %>%  # coresponding to
 # data_occ_freq
 number_occ_4 <- merge(data_occ,data_occ_freq,by =c('uniques4'))
 occ_table <- tab1(number_occ_4$count,graph = FALSE);
-occ_table$first.line <- "Frequncy table for count of conbination of ***gender, education, age, state*** \n"
+occ_table$first.line <- "Frequency table for count of combinations: ***gender, education, age, state*** \n"
 occ_table
 cat('\n');cat('\n');
 k3_4 <- rep(0,nrow(number_occ_4))
@@ -335,7 +332,7 @@ cat("\n");cat("\n");cat("\n")
 
 data_occ <- subset(data,select =  c(p_gender_name,p_age_group_name,p_state_name))
 data_occ$uniques3c<- paste0(p_gender_string,p_age_group2_string,p_state_string)
-data_occ_freq <- data_occ %>%  # coresponding to
+data_occ_freq <- data_occ %>%  # corresponding to
   group_by(uniques3c) %>%
   dplyr::summarize(count=n())
 # data_occ_freq
@@ -368,7 +365,7 @@ ftable(k3_3d)
 cat("\n");cat("\n");cat("\n")
 ```
 
-### d. Protecting demographic variables by suppressing values (in the duplicate variables)
+### d. Removing identification risk by suppressing demographic responses
 
 Unique combinations are suppressed by replacing one response in each unique combination of responses with missing data (i.e., an asterisk).
 The algorithm will suppress a given demographic value if the combination of the other three demographics is more frequent that any other combination of three. For example, a respondent’s education response will be suppressed if their gender/age/state combination appears more often in the data relative to other combinations of their demographics (gender/education/state, gender/education/age, education/age/state). In this example, the education response carries the greatest risk of identification so is selected for suppression. In this example, gender/age/state is a commonly occurring combination, therefore education is the outlier, or the most unique of the four demographics for that respondent. Therefore, education carries the greatest risk of identification so is selected for suppression.
@@ -394,11 +391,9 @@ for (i in 1:max_iteration) {
 
 In this section, we compare the frequency of responses for each variable before and after suppression so users can examine the distribution of missing data.
 
-There are 4 frequency tables that recorded how many values in each variable before and after the suppression. Table 1 shows combinations of gender, education, age, and state and indicates how many of those combinations were suppressed.
+Frequency tables report the number of responses in each response category before and after suppression. For each demographic variable, table 3.X.1  below reports exact combinations of responses that are unique (i.e., fewer than 3). And table 3.X.2 confirms that those unique combinations were suppressed by recoding one demographic response as missing.
 
 ### 3.1. Gender
-
-From the table 1.2
 
 ***Table 3.1.1 Every combination of responses and the number (count) of each where the response for Gender will be replaced with missing data.***
 
@@ -438,7 +433,7 @@ cat("\n");cat("\n");cat("\n");
 ***Table 3.1.2: Frequency table for Gender before and after suppression***
 
 ```{r echo=FALSE,results="markup"}
-# flexPrintFun <- function(x){                        #Function that print table with 2 columns
+# flexPrintFun <- function(x){                        #Function that prints table with 2 columns
 #   flextable(x) %>%
 #     width(j=1, width = 3.00) %>%
 #     width(j=2, width = 1.00) %>%
@@ -651,7 +646,9 @@ cat('\n')
 
 ## 4. Export de-identified data files for general release
 
-Data files with suppressed demographic data as described above will be exported and saved to the current working directory for distribution on ADA Dataverse.
+De-identified data files (with suppressed demographic data as described above) will be exported and saved to the current working directory for distribution on ADA Dataverse.
+
+NB. The Australian Data Archive
 
 ```{r}
 
