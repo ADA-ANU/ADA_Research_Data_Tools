@@ -9,6 +9,19 @@ output: word_document
 <!-- date: "`r format (Sys.time(), format='%Y-%m-%d')``" : 2023-01-13 -->
 
 ```{r setup, include=FALSE}
+
+############################################################
+#################### INSTRUCTIONS ##########################
+############################################################
+#
+# 1. Enter author information  above (project, depositor, archivist)
+#
+# 2. Complete 'Variable Specification' section below
+#
+# 3. 'Knit' code to generate report and deidentified data files
+#
+#############################################################
+
 knitr::opts_chunk$set(echo = FALSE,warning = FALSE, message = FALSE,comment=NA,results="asis")#results='asis'markup
 library (haven);             # Imports and export SPSS (.sav) data
 library (labelled);          # Calls value label, variable label and other information of the data
@@ -72,14 +85,16 @@ This is completed during the initial data cleaning process. Categories are colla
 Low-frequency categories are recoded as missing to ensure they cannot be identified. It is sometimes not sufficient to code those responses as 'other' or similar as they may still be unique enough as to be identifiable.
 
 ```{r}
-# # Populate the section below with your project information:
-- Enter the file path and original variable names (for gender, education, age, and state) in your data. Also include those variable names in the rmvar command.
-- Replace the missing value codes with any values in your data that should be recoded as missing in the deidentified version (i.e., any low-frequency categories that might lead to re-identification of participants in that category).
-- Specify file paths and file names where the deidentified version of the data will be saved.
-
 ######################################################################
-#################### Variable Name Specification #####################
+#################### Variable Specification ##########################
 ######################################################################
+#
+# POPULATE THE SECTION BELOW WITH YOUR PROJECT INFORMATION #
+#
+# - Enter the file path and original variable names (for gender, education, age, and state) in your data. 
+# - Replace the missing value codes with any values in your data that should be recoded as missing in the deidentified version (i.e., any low-frequency categories that might lead to re-identification of participants in that category).
+# - Specify file paths and file names where the deidentified version of the data will #be saved.
+#
 #
 # file_path <- ''                                              #destination to save confidentialised data
 # 
@@ -239,36 +254,36 @@ data[[p_state_name]]<- group_values(data[[p_state_name_ori]],missing_value_in_or
 # data <- add_new_value(data,p_state_name_ori,c('Refused'),c(missing_value))
 ```
 
-### b.Generate frequency tables
+### b.Generate frequency tables  
 
 ```{r fig.align='center'}
 cat('\n');cat('\n');cat('\n');cat('\n');
 freqtab_g1 <- tab1(labelled::to_factor(data[[p_gender_name]]) ,graph = F)
 freqtab_g1$first.line <- 'Frequency table for gender'
 cat('\n');cat('\n') 
-knitr::kable(freqtab_g1$output.table,caption = freqtab_g1$first.line,align = 'c') 
+knitr::kable(freqtab_g1$output.table,caption = freqtab_g1$first.line,align = 'c')  
 
 freqtab_e1 <- tab1(labelled::to_factor(data[[p_education_name]]) ,graph = F)
 freqtab_e1$first.line <- 'Frequency table for education level'
 cat('\n');cat('\n')
-knitr::kable(freqtab_e1$output.table ,caption = freqtab_e1$first.line,align = 'c' )
+knitr::kable(freqtab_e1$output.table ,caption = freqtab_e1$first.line,align = 'c' )  
 
 freqtab_a1 <- tab1(labelled::to_factor(data[[p_age_group_name]]) ,graph = F)
 freqtab_a1$first.line <- 'Frequency table for age group'
 cat('\n');cat('\n')
-knitr::kable(freqtab_a1$output.table ,caption=freqtab_a1$first.line,align = 'c')
+knitr::kable(freqtab_a1$output.table ,caption=freqtab_a1$first.line,align = 'c')  
 
 freqtab_s1 <- tab1(labelled::to_factor(data[[p_state_name]]) ,graph = F)
 freqtab_s1$first.line <- 'Frequency table for state'
 cat('\n');cat('\n')
-knitr::kable(freqtab_s1$output.table,caption = freqtab_s1$first.line,align = 'c')
+knitr::kable(freqtab_s1$output.table,caption = freqtab_s1$first.line,align = 'c')  
 
 # data.frame(freqtab1[2])
 ```
 
 ### c. Identify unique combinations of responses across the key demographic variables
 
-First missing values are replaced with an asterisk (*). Responses are then concatenated across the four demographic variables to identify combinations of responses that are unique (i.e., shared by fewer than four respondents).* **Unique Combinations**\* of all four or any three demographics are flagged.
+#First missing values are replaced with an asterisk (*). Responses are then concatenated across the four demographic variables to identify combinations of responses that are unique (i.e., shared by fewer than four respondents).* **Unique Combinations**\* of all four or any three demographics are flagged.
 
 Missing data is coded as an asterisk for ease of identifying missing data in the summary tables.
 
@@ -398,12 +413,12 @@ The process repeats iteratively until no additional unique combinations are dete
 ```{r results='markup'}
 data_con <- data
 for (i in 1:max_iteration) {
-  cat('#### the ',i,' iteration starts: \n')
+  cat('#### iteration ',i,' starts: \n')
   results <- conf_LinA_short(data_con,p_gender_name,p_age_group_name,p_education_name,p_state_name,NA_value=missing_value)
   data_con <- results$data_con
   if (!results$flag) {#if no need for iterations
     cat('\n\n #### ')
-    cat('The confidentiality process was completed in  ',i-1,' of iterations ####')
+    cat('The confidentiality process was completed in ',i-1,' iterations ####')
     break
   }
   cat('\n')
@@ -415,6 +430,8 @@ for (i in 1:max_iteration) {
 In this section, the frequency of responses is compared for each variable before and after suppression so users can examine the distribution of missing data.
 
 Frequency tables report the number of responses in each response category before and after suppression. For each demographic variable, table 3.X.1  below reports exact combinations of responses that are unique (i.e., fewer than 3). And table 3.X.2 confirms that those unique combinations were suppressed by recoding one demographic response as missing.
+
+If table 3.X.1 contains no values, no responses for that demographic were suppressed.
 
 ### 3.1. Gender
 
@@ -670,6 +687,8 @@ cat('\n')
 ## 4. Export de-identified data files
 
 De-identified data files (with suppressed demographic data as described above) will be exported and saved to the current working directory.
+
+Note that this de-identified data can be publised alongside a RESTRICTED version of the data that includes complete responses for the four demographics variables. The RESTRICTED version of that data can also include other demographic details and potentially sensitive information that the data owner wants to make available to a more limited audience.
 
 
 ```{r}
