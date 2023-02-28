@@ -283,7 +283,7 @@ knitr::kable(freqtab_s1$output.table,caption = freqtab_s1$first.line,align = 'c'
 
 ### c. Identify unique combinations of responses across the key demographic variables
 
-#First missing values are replaced with an asterisk (*). Responses are then concatenated across the four demographic variables to identify combinations of responses that are unique (i.e., shared by fewer than four respondents).* **Unique Combinations**\* of all four or any three demographics are flagged.
+First, missing values are replaced with an asterisk. Responses are then concatenated across the four demographic variables to identify combinations of responses that are unique (i.e., shared by fewer than four respondents). **Unique Combinations**\ of all four, or any three, demographics are flagged.
 
 Missing data is coded as an asterisk for ease of identifying missing data in the summary tables.
 
@@ -429,7 +429,7 @@ for (i in 1:max_iteration) {
 
 In this section, the frequency of responses is compared for each variable before and after suppression so users can examine the distribution of missing data.
 
-Frequency tables report the number of responses in each response category before and after suppression. For each demographic variable, table 3.X.1  below reports exact combinations of responses that are unique (i.e., fewer than 3). And table 3.X.2 confirms that those unique combinations were suppressed by recoding one demographic response as missing.
+Frequency tables report the number of responses in each category before and after suppression. For each demographic variable, table 3.X.1  below reports exact combinations of responses that are unique (i.e., fewer than 3 participants share this combination). And table 3.X.2 confirms that those unique combinations were suppressed by recoding one demographic response as missing.
 
 If table 3.X.1 contains no values, no responses for that demographic were suppressed.
 
