@@ -28,17 +28,10 @@ library (labelled);          # Calls value label, variable label and other infor
 library (tidyverse);         # Managing data files with a better representation  
 library (dplyr)              # Managing the functions using pipes %>%
 library (sjlabelled)         # Supports 'rename_at', 'var_labels' and 'add_value_labels' functions
-# library (Hmisc)
-library(foreign)
-library(car)
-library(reshape2)
-library(gmodels)
+library(car)                 # Supports recode function
 library(flextable)
-# library('plyr')
 library(epiDisplay)
-
 source("./Lib/DPtool.R")
-
 source("./Lib/linaconf.R")
 
 
@@ -145,14 +138,15 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # 
 # missing_value_in_original <- c(-99:-1,90:99,NA)           #recode values as missing
 # missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)  #also recode '3' as missing for gender
+# missing_value_in_original_education <- missing_value_in_original
 # missing_value_in_original_age <- missing_value_in_original
 # missing_value_in_original_state <- missing_value_in_original
 # missing_value <- -9999                                    #confidentialised value that save to the confidentialised data
 # missing_label <- 'Missing/Confidentialised'               #confidentialised value name that save to the confidentialised data
 # max_iteration <- 3                                        #the number of the iterations that do the k-anonymity
-#
+# 
 # rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori) #remove original variables
-#                                                           
+# 
 # save_spss_filepath <- './2_ANUPoll_43_SPSS_100007.sav'    # Path(s) to save confidentialised data.
 # save_csv_filepath <- './2_ANUPoll_43_CSV_100007.csv'
 # save_sas_filepath <- ''
@@ -162,8 +156,8 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 ######################################################################
 ###################### Social Cohesion Template ######################
 ######################################################################
-#
-# file_path <- './Social_Cohesion_Survey_2021_SPSS_100075_RESTRICTED.sav'    
+# 
+# file_path <- './Social_Cohesion_Survey_2021_SPSS_100075_RESTRICTED.sav'
 # 
 # p_gender_name_ori <- 'dem2'                               #gender variable name in the original data
 # p_gender_name <- 'p_gender_sdc'                           #gender variable name saving to the confidentialised data
@@ -186,10 +180,10 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # missing_value <- -9999                                    #code for all missing and confidentialised values in the confidentialised data
 # missing_label <- 'Missing/Confidentialised'               #label for all missing and confidentialised values in the confidentialised data
 # max_iteration <- 5                                        #maximum number of iterations to detect and suppress unique response combinations
-#
+# 
 # rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori) #remove original variables
-#  
-# save_spss_filepath <- './2_Social_Cohesion_2021_SPSS_100075.sav'  # Path(s) to save confidentialised data.
+# 
+# save_spss_filepath <- './2_Social_Cohesion_2021_SPSS_100075.sav'  # Path(s) to save confidentialised data.Keep it empty if you don't wanna sabe
 # save_csv_filepath <- './2_Social_Cohesion_2021_CSV_100075.csv'
 # save_sas_filepath <- ''
 # save_dta_filepath <- ''
@@ -215,6 +209,11 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # 
 # missing_value_in_original <- c(-99:-1,90:99,NA)           #values (and value ranges) to be recoded as missing (e.g., N/A, sys missing, other, etc.)
 # missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)  #as above, but include any variable-specific values to recode as missing
+
+# missing_value_in_original_education <- c(-99:-1,90:99,NA,11)  #also recode '11' as missing for educatino
+# missing_value_in_original_age <- missing_value_in_original
+# missing_value_in_original_state <- missing_value_in_original
+
 
 # missing_value <- -9999                                    #code for all missing and confidentialised values in the confidentialised data
 # missing_label <- 'Missing/Confidentialised'               #label for all missing and confidentialised values in the confidentialised data
