@@ -72,13 +72,19 @@ This is completed during the initial data cleaning process. Categories are colla
 Low-frequency categories are recoded as missing to ensure they cannot be identified. It is sometimes not sufficient to code those responses as 'other' or similar as they may still be unique enough as to be identifiable.
 
 ```{r}
-# # Please enter the original variable names  (for gender, education, age, and state) and name the new deidentified variables that will be produced by this syntax.
+# # Populate the section below with your project information:
+- Enter the file path and original variable names (for gender, education, age, and state) in your data. Also include those variable names in the rmvar command.
+- Replace the missing value codes with any values in your data that should be recoded as missing in the deidentified version (i.e., any low-frequency categories that might lead to re-identification of participants in that category).
+- 
 
-#####################   argparse template################################################## 
+######################################################################
+#################### Variable Name Specification #####################
+######################################################################
+#
 # file_path <- ''                                              #destination to save confidentialised data
 # 
-# p_gender_name_ori <- ''                                      #gender variable name in the original data
-# p_gender_name <- 'p_gender_sdc'                              #gender variable name saving to the confidentialised data
+# p_gender_name_ori <- ""                                      #gender variable name in the original data
+# p_gender_name <- "p_gender_sdc"                              #gender variable name saving to the confidentialised data
 # 
 # p_age_group_name_ori <- ""                                   #age group variable name in the original data
 # p_age_group_name <- "p_age_group_sdc"                        #age group variable name saving to the confidentialised data
@@ -89,11 +95,8 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # p_state_name_ori <- ""                                       #state variable name in the original data
 # p_state_name <- "p_state_sdc"                                #state variable name saving to the confidentialised data
 # 
-# missing_value_in_original <- c(-99:-1,90:99,NA)           #recode 'refuse, unknown,don't know, unable to establish, invalid,other' responses to argpase@missing_label
-# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)  #as above, but in LinA panel data, 'other' somehow was recoded 3 May need append 3 in the end.
-# missing_value_in_original_education <- c(-99:-1,90:99,NA) #as above, but in social cohesion data, 'other' somehow was recoded as 11.
-# missing_value_in_original_age <- missing_value_in_original
-# missing_value_in_original_state <- missing_value_in_original
+# missing_value_in_original <- c(-99:-1,90:99,NA)           #values (and value ranges) to be recoded as missing (e.g., N/A, sys missing, other, etc.)
+# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)  #as above, but include any variable-specific values to recode as missing
 
 # missing_value <- -9999                                    #code for all missing and confidentialised values in the confidentialised data
 # missing_label <- 'Missing/Confidentialised'               #label for all missing and confidentialised values in the confidentialised data
@@ -101,17 +104,17 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 
 
 # rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori)       #variables removed from confidentialised data
-# save_spss_filepath <- './.sav'   # Path to save confidentialised data.
+# save_spss_filepath <- './.sav'   # Path(s) to save confidentialised data.
 # save_csv_filepath <- './.csv'
-# save_sas_filepath <- ''
-# save_dta_filepath <- ''
+# save_sas_filepath <- './.sas7bdat'
+# save_dta_filepath <- './.dta'
 
 
-###################################################################################################################################################
-########################################################## ANU POll Template ######################################################################
-###################################################################################################################################################
+######################################################################
+######################### ANU POll Template ##########################
+######################################################################
 # 
-# file_path <- 'Z:/assda/publish/ANU/Archivists/Weifan/ANUpoll data/ANUPoll 43 100007/02_ANUPoll_43_Data_File_100007.sav'     #data to confidentialise
+# file_path <- 'Z:/assda/publish/ANU/Archivists/Weifan/ANUpoll data/ANUPoll 43 100007/02_ANUPoll_43_Data_File_100007.sav'
 # 
 # p_gender_name_ori <- 'gender_con'                            #gender variable name in the original data
 # p_gender_name <- 'p_gender_sdc'                              #gender variable name saving to the confidentialised data
@@ -125,55 +128,89 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # p_state_name_ori <- "p_state"                                #state variable name in the original data
 # p_state_name <- "p_state_sdc"                                #state variable name saving to the confidentialised data
 # 
-# missing_value_in_original <- c(-99:-1,90:99,NA)           #recode 'refuse, unknown,don't know, unable to establish, invalid,other' responses to argpase@missing_label
-# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)  #as above, but in LinA panel data, 'other' somehow was recoded 3 May need append 3 in the end.
-# missing_value_in_original_education <- c(-99:-1,90:99,NA) #as above, but in social cohesion data, 'other' somehow was recoded as 11.
+# missing_value_in_original <- c(-99:-1,90:99,NA)           #recode values as missing
+# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)  #also recode '3' as missing for gender
 # missing_value_in_original_age <- missing_value_in_original
 # missing_value_in_original_state <- missing_value_in_original
-# missing_value <- -97                                      #confidentialised value that save to the confidentialised data
-# missing_label <- 'Missing' #Refused/Unknow                #confidentialised value name that save to the confidentialised data
-# max_iteration <- 3                                       #the number of the iterations that do the k-anonymity
-# rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori)
-#                                                           # variable name that will be removed in the confidentialised data. No need to change basically
-# save_spss_filepath <- './2_Lowey_2020_SPSS_100046_confi.sav'  # Path to save confidentialised data.
-# save_csv_filepath <- './2_Lowey_2020_CSV_100046_confi.csv'
+# missing_value <- -9999                                    #confidentialised value that save to the confidentialised data
+# missing_label <- 'Missing/Confidentialised'               #confidentialised value name that save to the confidentialised data
+# max_iteration <- 3                                        #the number of the iterations that do the k-anonymity
+#
+# rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori) #remove original variables
+#                                                           
+# save_spss_filepath <- './2_ANUPoll_43_SPSS_100007.sav'    # Path(s) to save confidentialised data.
+# save_csv_filepath <- './2_ANUPoll_43_CSV_100007.csv'
 # save_sas_filepath <- ''
 # save_dta_filepath <- ''
 
 
-################################## cohesion
-
-# file_path <- './Social_Cohesion_Survey_2021_SPSS_100075_RESTRICTED.sav'     #sav data to confidentialise
+######################################################################
+###################### Social Cohesion Template ######################
+######################################################################
+#
+# file_path <- './Social_Cohesion_Survey_2021_SPSS_100075_RESTRICTED.sav'    
 # 
-# p_gender_name_ori <- 'dem2'                      #gender variable name in the original data
+# p_gender_name_ori <- 'dem2'                               #gender variable name in the original data
 # p_gender_name <- 'p_gender_sdc'                           #gender variable name saving to the confidentialised data
 # 
-# p_age_group_name_ori <- "dem1a"                #age group variable name in the original data
+# p_age_group_name_ori <- "dem1a"                           #age group variable name in the original data
 # p_age_group_name <- "p_age_group_sdc"                     #age group variable name saving to the confidentialised data
 # 
-# p_education_name_ori <- "dem10"                #education level variable name in the original data
+# p_education_name_ori <- "dem10"                           #education level variable name in the original data
 # p_education_name <- "p_education_sdc"                     #education level variable name saving to the confidentialised data
 # 
-# p_state_name_ori <- "state"                        #state variable name in the original data
+# p_state_name_ori <- "state"                               #state variable name in the original data
 # p_state_name <- "p_state_sdc"                             #state variable name saving to the confidentialised data
 # 
-# missing_value_in_original <- c(-99:-1,90:99,NA)           #recode 'refuse, unknown,don't know, unable to establish, invalid,other' responses to argpase@missing_label
-# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)    #as above, but in LinA panel data, 'other' somehow was recoded 3 May need append 3 in the end.
-# missing_value_in_original_education <- c(-99:-1,90:99,NA,11) #as above, but in social cohesion data, 'other' somehow was recoded as 11.
+# missing_value_in_original <- c(-99:-1,90:99,NA)               #recode values as missing
+# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)      #also recode '3' as missing for gender
+# missing_value_in_original_education <- c(-99:-1,90:99,NA,11)  #also recode '11' as missing for educatino
 # missing_value_in_original_age <- missing_value_in_original
 # missing_value_in_original_state <- missing_value_in_original
 # 
-# missing_value <- -97                                      #confidentialised value that save to the confidentialised data
-# missing_label <- 'Missing' #Refused/Unknow                #confidentialised value name that save to the confidentialised data
-# max_iteration <- 5                                        #the number of the iterations that do the k-anonymity
-# rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori)
-#                                                           # variable name that will be removed in the confidentialised data. No need to change basically
-# save_spss_filepath <- './2_Lowey_2020_SPSS_100046_confi.sav'  # Path to save confidentialised data.
-# save_csv_filepath <- './2_Lowey_2020_CSV_100046_confi.csv'
+# missing_value <- -9999                                    #code for all missing and confidentialised values in the confidentialised data
+# missing_label <- 'Missing/Confidentialised'               #label for all missing and confidentialised values in the confidentialised data
+# max_iteration <- 5                                        #maximum number of iterations to detect and suppress unique response combinations
+#
+# rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori) #remove original variables
+#  
+# save_spss_filepath <- './2_Social_Cohesion_2021_SPSS_100075.sav'  # Path(s) to save confidentialised data.
+# save_csv_filepath <- './2_Social_Cohesion_2021_CSV_100075.csv'
 # save_sas_filepath <- ''
 # save_dta_filepath <- ''
 
 
+######################################################################
+######################## Lowy Poll Template ##########################
+######################################################################
+#
+# file_path <- ''                                              #destination to save confidentialised data
+# 
+# p_gender_name_ori <- ""                                      #gender variable name in the original data
+# p_gender_name <- "p_gender_sdc"                              #gender variable name saving to the confidentialised data
+# 
+# p_age_group_name_ori <- ""                                   #age group variable name in the original data
+# p_age_group_name <- "p_age_group_sdc"                        #age group variable name saving to the confidentialised data
+# 
+# p_education_name_ori <- ""                                   #education level variable name in the original data
+# p_education_name <- "p_education_sdc"                        #education level variable name saving to the confidentialised data
+#   
+# p_state_name_ori <- ""                                       #state variable name in the original data
+# p_state_name <- "p_state_sdc"                                #state variable name saving to the confidentialised data
+# 
+# missing_value_in_original <- c(-99:-1,90:99,NA)           #values (and value ranges) to be recoded as missing (e.g., N/A, sys missing, other, etc.)
+# missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)  #as above, but include any variable-specific values to recode as missing
+
+# missing_value <- -9999                                    #code for all missing and confidentialised values in the confidentialised data
+# missing_label <- 'Missing/Confidentialised'               #label for all missing and confidentialised values in the confidentialised data
+# max_iteration <- 5                                        #maximum number of iterations to detect and suppress unique response combinations
+
+
+# rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori)       #variables removed from confidentialised data
+# save_spss_filepath <- './.sav'   # Path(s) to save confidentialised data.
+# save_csv_filepath <- './.csv'
+# save_sas_filepath <- './.sas7bdat'
+# save_dta_filepath <- './.dta'
 
 ```
 
@@ -181,35 +218,25 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 
 data <- haven::read_sav(file_path)
 
-
-#We only leave two categories for gender variable (to decrease identification risk recoding -98 and 3 into SYSMIS)
-
-#Note 1. the program will automatically recode -99 to -1 and 90 to 99 as system missing.
 #Note 2. preprocessing may be required as well. For instance, group continuous age variable to categorical
-#Note 3. In ANUpoll, ADAID 01459: it also had a variable p_further_ed
 #Note 4. usually state variable does not have NA values, then We add NA catagory to the State.
 
-####################### Draft for group 2 or 3 values into one category [codes all defined missing as *].
+######################################################################
+######## Grouping missing values together into one category ##########
+######################################################################
 
-
-
-
-################## preprocesssing gender
 data[[p_gender_name]] <- group_values(data[[p_gender_name_ori]],missing_value_in_original_gender,missing_value,missing_label)
-
-
-################### preprocessing age
 
 data[[p_age_group_name]]<- group_values(data[[p_age_group_name_ori]],missing_value_in_original_age,missing_value,missing_label)
 
-
-################# preprocessing education
 data[[p_education_name]]<- group_values(data[[p_education_name_ori]],missing_value_in_original_education,missing_value,missing_label)
 
-################# preprocessing state
 data[[p_state_name]]<- group_values(data[[p_state_name_ori]],missing_value_in_original_state,missing_value,missing_label)
 
 
+################################################################################
+######## Include a missing code for variables that have no missing data ########
+################################################################################
 
 # May need new value label for unknown/refused [if there is no missing data at all].
 # data <- add_new_value(data,p_state_name_ori,c('Refused'),c(missing_value))
