@@ -75,7 +75,7 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # # Populate the section below with your project information:
 - Enter the file path and original variable names (for gender, education, age, and state) in your data. Also include those variable names in the rmvar command.
 - Replace the missing value codes with any values in your data that should be recoded as missing in the deidentified version (i.e., any low-frequency categories that might lead to re-identification of participants in that category).
-- 
+- Specify file paths and file names where the deidentified version of the data will be saved.
 
 ######################################################################
 #################### Variable Name Specification #####################
@@ -218,9 +218,6 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 
 data <- haven::read_sav(file_path)
 
-#Note 2. preprocessing may be required as well. For instance, group continuous age variable to categorical
-#Note 4. usually state variable does not have NA values, then We add NA catagory to the State.
-
 ######################################################################
 ######## Grouping missing values together into one category ##########
 ######################################################################
@@ -242,7 +239,7 @@ data[[p_state_name]]<- group_values(data[[p_state_name_ori]],missing_value_in_or
 # data <- add_new_value(data,p_state_name_ori,c('Refused'),c(missing_value))
 ```
 
-### b.Frequency tables
+### b.Generate frequency tables
 
 ```{r fig.align='center'}
 cat('\n');cat('\n');cat('\n');cat('\n');
@@ -255,7 +252,6 @@ freqtab_e1 <- tab1(labelled::to_factor(data[[p_education_name]]) ,graph = F)
 freqtab_e1$first.line <- 'Frequency table for education level'
 cat('\n');cat('\n')
 knitr::kable(freqtab_e1$output.table ,caption = freqtab_e1$first.line,align = 'c' )
-
 
 freqtab_a1 <- tab1(labelled::to_factor(data[[p_age_group_name]]) ,graph = F)
 freqtab_a1$first.line <- 'Frequency table for age group'
@@ -272,7 +268,7 @@ knitr::kable(freqtab_s1$output.table,caption = freqtab_s1$first.line,align = 'c'
 
 ### c. Identify unique combinations of responses across the key demographic variables
 
-First we replace missing values with an asterisk (*). We then concatenate responses across the four demographic variables to identify combinations of responses that are unique (i.e., shared by fewer than four respondents).* **Unique Combinations**\* of all four or any three demographics are flagged.
+First missing values are replaced with an asterisk (*). Responses are then concatenated across the four demographic variables to identify combinations of responses that are unique (i.e., shared by fewer than four respondents).* **Unique Combinations**\* of all four or any three demographics are flagged.
 
 Missing data is coded as an asterisk for ease of identifying missing data in the summary tables.
 
@@ -397,7 +393,7 @@ cat("\n");cat("\n");cat("\n")
 Unique combinations are suppressed by replacing one response in each unique combination of responses with missing data (i.e., an asterisk).
 The algorithm will suppress a given demographic value if the combination of the other three demographics is more frequent that any other combination of three. For example, a respondent’s education response will be suppressed if their gender/age/state combination appears more often in the data relative to other combinations of their demographics (gender/education/state, gender/education/age, education/age/state). In this example, the education response carries the greatest risk of identification so is selected for suppression. In this example, gender/age/state is a commonly occurring combination, therefore education is the outlier, or the most unique of the four demographics for that respondent. Therefore, education carries the greatest risk of identification so is selected for suppression.
 
-We repeat this process iteratively until no additional unique combinations are detected.
+The process repeats iteratively until no additional unique combinations are detected.
 
 ```{r results='markup'}
 data_con <- data
@@ -416,7 +412,7 @@ for (i in 1:max_iteration) {
 
 ## 3. Results and Comparison
 
-In this section, we compare the frequency of responses for each variable before and after suppression so users can examine the distribution of missing data.
+In this section, the frequency of responses is compared for each variable before and after suppression so users can examine the distribution of missing data.
 
 Frequency tables report the number of responses in each response category before and after suppression. For each demographic variable, table 3.X.1  below reports exact combinations of responses that are unique (i.e., fewer than 3). And table 3.X.2 confirms that those unique combinations were suppressed by recoding one demographic response as missing.
 
@@ -508,7 +504,7 @@ cat('\n')
 
 ### 3.2. Education
 
-***Table 3.2.1: Every combination of k\<3 demographic responses and the number (count) of each combination, and setting these Education to missing value.***
+***Table 3.2.1: Every combination of responses and the number (count) of each where the response for Education will be replaced with missing data.***
 
 ```{r}
 list1 <- data[[p_education_name]]
@@ -524,7 +520,7 @@ freq_t[freq_t==missing_value]='*'
 theme_box(flexPrintFun(freq_t ))
 ```
 
-***Table 3.2.1: Frequency table shows education before and after suppression***
+***Table 3.2.1: Frequency table for Education before and after suppression***
 
 ```{r echo=FALSE}
 freqtab_e2 <- tab1(labelled::to_factor(data_con[[p_education_name]]) ,graph = F)
@@ -562,7 +558,7 @@ cat('\n')
 
 ### 3.3. Age group
 
-***Table 3.3.1: Every combination of k\<3 demographic responses and the number (count) of each combination, and setting these Age group to missing value.***
+***Table 3.3.1: Every combination of responses and the number (count) of each where the response for Age will be replaced with missing data.***
 
 ```{r}
 list1 <- data[[p_age_group_name]]
@@ -578,7 +574,7 @@ freq_t[freq_t==missing_value]='*'
 theme_box(flexPrintFun(freq_t ))
 ```
 
-***Table 3.3.2: Frequency table shows age group before and after suppression***
+***Table 3.3.2: Frequency table for Age before and after suppression***
 
 ```{r echo=FALSE}
 freqtab_a2 <- tab1(labelled::to_factor(data_con[[p_age_group_name]]) ,graph = F)
@@ -615,7 +611,7 @@ cat('\n')
 
 ### 3.4. State
 
-***Table 3.4.1: Every combination of k\<3 demographic responses and the number (count) of each combination, and setting these State to missing value.***
+***Table 3.4.1: Every combination of responses and the number (count) of each where the response for State will be replaced with missing data.***
 
 ```{r}
 list1 <- data[[p_state_name]]
@@ -632,7 +628,7 @@ theme_box(flexPrintFun(freq_t ))
 
 ```
 
-***Table 3.4.1: Frequency table shows state before and after suppression***
+***Table 3.4.1: Frequency table for State before and after suppression***
 
 ```{r echo=FALSE}
 # cat("\n"); cat("\n");
@@ -671,19 +667,20 @@ if (as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])==1){
 cat('\n')
 ```
 
-## 4. Export de-identified data files for general release
+## 4. Export de-identified data files
 
-De-identified data files (with suppressed demographic data as described above) will be exported and saved to the current working directory for distribution on ADA Dataverse.
+De-identified data files (with suppressed demographic data as described above) will be exported and saved to the current working directory.
 
-NB. The Australian Data Archive
 
 ```{r}
 
 data_con_save <- data_con[ , -which(names(data_con) %in% rm_var )]
 
-#####################################################################################################################
-#######################   Write data in SPSS (.sav): Archivist may change the name and location #####################
-######################################  ###############################################################################
+# # Specify file paths and names where the deidentified data will be saved.
+
+################################################################
+#######################  Export data files #####################
+################################################################
 
 if (!save_spss_filepath==''){
   write_spss(data_con_save, save_spss_filepath,drop.na = FALSE)
