@@ -87,6 +87,7 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # - Enter the file path and original variable names (for gender, education, age, and state) in your data. 
 # - Replace the missing value codes with any values in your data that should be recoded as missing in the deidentified version (i.e., any low-frequency categories that might lead to re-identification of participants in that category).
 # - Specify file paths and file names where the deidentified version of the data will #be saved.
+# - Remove all the hashtags in the section below to ensure every line of code runs.
 #
 #
 # file_path <- ''                                              #destination to save confidentialised data
@@ -105,7 +106,9 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # 
 # missing_value_in_original <- c(-99:-1,90:99,NA)           #values (and value ranges) to be recoded as missing (e.g., N/A, sys missing, other, etc.)
 # missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)  #as above, but include any variable-specific values to recode as missing
-
+# missing_value_in_original_education <- missing_value_in_original
+# missing_value_in_original_age <- missing_value_in_original
+# missing_value_in_original_state <- missing_value_in_original
 # missing_value <- -9999                                    #code for all missing and confidentialised values in the confidentialised data
 # missing_label <- 'Missing/Confidentialised'               #label for all missing and confidentialised values in the confidentialised data
 # max_iteration <- 5                                        #maximum number of iterations to detect and suppress unique response combinations
@@ -173,7 +176,7 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # 
 # missing_value_in_original <- c(-99:-1,90:99,NA)               #recode values as missing
 # missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)      #also recode '3' as missing for gender
-# missing_value_in_original_education <- c(-99:-1,90:99,NA,11)  #also recode '11' as missing for educatino
+# missing_value_in_original_education <- c(-99:-1,90:99,NA,11)  #also recode '11' as missing for education
 # missing_value_in_original_age <- missing_value_in_original
 # missing_value_in_original_state <- missing_value_in_original
 # 
@@ -209,11 +212,9 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # 
 # missing_value_in_original <- c(-99:-1,90:99,NA)           #values (and value ranges) to be recoded as missing (e.g., N/A, sys missing, other, etc.)
 # missing_value_in_original_gender <- c(-99:-1,90:99,NA,3)  #as above, but include any variable-specific values to recode as missing
-
 # missing_value_in_original_education <- c(-99:-1,90:99,NA,11)  #also recode '11' as missing for educatino
 # missing_value_in_original_age <- missing_value_in_original
 # missing_value_in_original_state <- missing_value_in_original
-
 
 # missing_value <- -9999                                    #code for all missing and confidentialised values in the confidentialised data
 # missing_label <- 'Missing/Confidentialised'               #label for all missing and confidentialised values in the confidentialised data
@@ -254,6 +255,7 @@ data[[p_state_name]]<- group_values(data[[p_state_name_ori]],missing_value_in_or
 ```
 
 ### b.Generate frequency tables  
+
 
 ```{r fig.align='center'}
 cat('\n');cat('\n');cat('\n');cat('\n');
