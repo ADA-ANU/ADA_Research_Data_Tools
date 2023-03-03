@@ -160,7 +160,7 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 ###################### Social Cohesion Template ######################
 ######################################################################
 # 
-# file_path <- './Social_Cohesion_Survey_2021_SPSS_100075_RESTRICTED.sav'
+# file_path <- './Data/Social_Cohesion_Survey_2021_SPSS_100075_RESTRICTED.sav'
 # 
 # p_gender_name_ori <- 'dem2'                               #gender variable name in the original data
 # p_gender_name <- 'p_gender_sdc'                           #gender variable name saving to the confidentialised data
@@ -196,7 +196,7 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 ######################## Lowy Poll Template ##########################
 ######################################################################
 #
-# file_path <- ''                                              #destination to save confidentialised data
+# file_path <- './Data/2_Lowey_2020_SPSS_100046_GENERAL.sav'                                              #destination to save confidentialised data
 # 
 # p_gender_name_ori <- ""                                      #gender variable name in the original data
 # p_gender_name <- "p_gender_sdc"                              #gender variable name saving to the confidentialised data
@@ -206,7 +206,7 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # 
 # p_education_name_ori <- ""                                   #education level variable name in the original data
 # p_education_name <- "p_education_sdc"                        #education level variable name saving to the confidentialised data
-#   
+# 
 # p_state_name_ori <- ""                                       #state variable name in the original data
 # p_state_name <- "p_state_sdc"                                #state variable name saving to the confidentialised data
 # 
@@ -215,12 +215,12 @@ Low-frequency categories are recoded as missing to ensure they cannot be identif
 # missing_value_in_original_education <- c(-99:-1,90:99,NA,11)  #also recode '11' as missing for educatino
 # missing_value_in_original_age <- missing_value_in_original
 # missing_value_in_original_state <- missing_value_in_original
-
+# 
 # missing_value <- -9999                                    #code for all missing and confidentialised values in the confidentialised data
 # missing_label <- 'Missing/Confidentialised'               #label for all missing and confidentialised values in the confidentialised data
 # max_iteration <- 5                                        #maximum number of iterations to detect and suppress unique response combinations
-
-
+# 
+# 
 # rm_var <- c(p_gender_name_ori,p_age_group_name_ori,p_education_name_ori,p_state_name_ori)       #variables removed from confidentialised data
 # save_spss_filepath <- './.sav'   # Path(s) to save confidentialised data.
 # save_csv_filepath <- './.csv'
@@ -246,27 +246,23 @@ data[[p_education_name]]<- group_values(data[[p_education_name_ori]],missing_val
 data[[p_state_name]]<- group_values(data[[p_state_name_ori]],missing_value_in_original_state,missing_value,missing_label)
 
 
-################################################################################
-######## Include a missing code for variables that have no missing data ########
-################################################################################
-
-# May need new value label for unknown/refused [if there is no missing data at all].
-# data <- add_new_value(data,p_state_name_ori,c('Refused'),c(missing_value))
 ```
 
 ### b.Generate frequency tables  
 
+<br>
+<br>
 
 ```{r fig.align='center'}
-cat('\n');cat('\n');cat('\n');cat('\n');
+
 freqtab_g1 <- tab1(labelled::to_factor(data[[p_gender_name]]) ,graph = F)
 freqtab_g1$first.line <- 'Frequency table for gender'
-cat('\n');cat('\n') 
+cat('       \n');cat('            \n') 
 knitr::kable(freqtab_g1$output.table,caption = freqtab_g1$first.line,align = 'c')  
 
 freqtab_e1 <- tab1(labelled::to_factor(data[[p_education_name]]) ,graph = F)
 freqtab_e1$first.line <- 'Frequency table for education level'
-cat('\n');cat('\n')
+cat('        \n       ');cat('      \n           ')
 knitr::kable(freqtab_e1$output.table ,caption = freqtab_e1$first.line,align = 'c' )  
 
 freqtab_a1 <- tab1(labelled::to_factor(data[[p_age_group_name]]) ,graph = F)
@@ -276,11 +272,13 @@ knitr::kable(freqtab_a1$output.table ,caption=freqtab_a1$first.line,align = 'c')
 
 freqtab_s1 <- tab1(labelled::to_factor(data[[p_state_name]]) ,graph = F)
 freqtab_s1$first.line <- 'Frequency table for state'
-cat('\n');cat('\n')
+cat('                 \n');cat('\n            ')
 knitr::kable(freqtab_s1$output.table,caption = freqtab_s1$first.line,align = 'c')  
 
 # data.frame(freqtab1[2])
 ```
+<br>
+<br>
 
 ### c. Identify unique combinations of responses across the key demographic variables
 
@@ -435,7 +433,7 @@ Frequency tables report the number of responses in each category before and afte
 If table 3.X.1 contains no values, no responses for that demographic were suppressed.
 
 ### 3.1. Gender
-
+<br>
 ***Table 3.1.1 Every combination of responses and the number (count) of each where the response for Gender will be replaced with missing data.***
 
 ```{r}
@@ -470,7 +468,7 @@ freq_t[freq_t==missing_value]='*'
 theme_box(flexPrintFun(freq_t ))
 cat("\n");cat("\n");cat("\n");
 ```
-
+<br>
 ***Table 3.1.2: Frequency table for Gender before and after suppression***
 
 ```{r echo=FALSE,results="markup"}
@@ -502,7 +500,7 @@ colnames(freq_con) <- c('Value', 'Value Label','#before','#after',"Difference")
 
 knitr::kable(freq_con,caption = "",align = 'c')
 ```
-
+<br>
 
 ```{r echo=FALSE}
 
@@ -519,9 +517,9 @@ if (as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])==1){
 cat('\n')
 
 ```
-
+<br>
 ### 3.2. Education
-
+<br>
 ***Table 3.2.1: Every combination of responses and the number (count) of each where the response for Education will be replaced with missing data.***
 
 ```{r}
@@ -537,7 +535,7 @@ names(freq_t) <- c('gender','education','age','state','count')
 freq_t[freq_t==missing_value]='*'
 theme_box(flexPrintFun(freq_t ))
 ```
-
+<br>
 ***Table 3.2.1: Frequency table for Education before and after suppression***
 
 ```{r echo=FALSE}
@@ -573,7 +571,7 @@ if (as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])==1){
 cat('\n')
 
 ```
-
+<br>
 ### 3.3. Age group
 
 ***Table 3.3.1: Every combination of responses and the number (count) of each where the response for Age will be replaced with missing data.***
@@ -591,7 +589,7 @@ names(freq_t) <- c('gender','education','age','state','count')
 freq_t[freq_t==missing_value]='*'
 theme_box(flexPrintFun(freq_t ))
 ```
-
+<br>
 ***Table 3.3.2: Frequency table for Age before and after suppression***
 
 ```{r echo=FALSE}
@@ -626,7 +624,7 @@ if (as.integer(freq_con$Difference[which(freq_con$Value==missing_value)])==1){
 }
 cat('\n')
 ```
-
+<br>
 ### 3.4. State
 
 ***Table 3.4.1: Every combination of responses and the number (count) of each where the response for State will be replaced with missing data.***
@@ -645,7 +643,7 @@ freq_t[freq_t==missing_value]='*'
 theme_box(flexPrintFun(freq_t ))
 
 ```
-
+<br>
 ***Table 3.4.1: Frequency table for State before and after suppression***
 
 ```{r echo=FALSE}
