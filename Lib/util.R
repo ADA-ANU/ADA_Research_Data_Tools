@@ -3,6 +3,29 @@ library(labelled);     # To extarct information from the data
 library(flextable);    # To create tables with merged rows for designated columns
 library(officer)
 
+spss_value_labels <- function(var){
+  
+  posi <- which(sapply(names(data), function(x) grepl(x, var_label(var))))
+  Line_1 <- paste0('ADD VALUE LABELS ',names(posi)) %>% 
+    paste0('\n')
+  cat(Line_1)
+  vals<- val_labels(var)
+  for (i in 1:(length(vals)-1)){
+    Lines <- paste0(vals[i]," '") %>% 
+      paste0(names(vals)[i]) %>% 
+      paste0("'\n")
+    
+    cat(Lines)
+  }
+  Lines <- paste0(vals[i+1]," '") %>% 
+    paste0(names(vals)[i+1]) %>% 
+    paste0("'.\n") %>% 
+    paste0('EXECUTE.\n')
+  cat(Lines)
+}
+
+
+
 
 IPII_GEO_keywords<- regex("(vill)|(town)|(post)|(code)",ignore_case = TRUE)
 IPII_NGEO_keywords<- regex("(edu)|(occupation)",ignore_case = TRUE)

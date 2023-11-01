@@ -407,7 +407,7 @@ conf_LinA_short <- function(data, gender_varname, age_varname,education_varname,
     flag_need_another_iteration <- T
     
   }
-  if (diff==1){
+  if (diff==1  || diff==0){
     cat('total gender:        ',diff, ' response was suppressed \n')
   }else{
     cat('total gender:        ',diff, ' responses were suppressed \n')
@@ -429,7 +429,7 @@ conf_LinA_short <- function(data, gender_varname, age_varname,education_varname,
   
   # #cat("\n the education NA in original data is ",which(p_education_string=="*"))
   # #cat("\n the education NA in confi data is ",which( data_con[[education_varname]]==NA_value))
-  if (diff==1){
+  if (diff==1  || diff==0){
     cat('total education:     ',diff, ' response was suppressed \n')
 
   }else{
@@ -449,7 +449,7 @@ conf_LinA_short <- function(data, gender_varname, age_varname,education_varname,
     
   }
   
-  if (diff==1){
+  if (diff==1  ||  diff==0){
     cat('total age:           ',diff, ' response was suppressed \n')
     
   }else{
@@ -468,7 +468,7 @@ conf_LinA_short <- function(data, gender_varname, age_varname,education_varname,
   if (diff!=0){
     flag_need_another_iteration <- T
   }
-  if (diff==1){
+  if (diff==1  ||  diff==0){
     cat('total state:         ',diff, ' response was suppressed \n')
     
   }else{
@@ -939,7 +939,9 @@ conf_LinA <- function(data, gender_varname, age_varname,education_varname,state_
     
   }
   cat('total gender:        ',diff, ' respondants were suppressed \n')
-
+  # #cat("\n the gender NA in original data is ",posi_na_ori)
+  # #cat("\n the gender NA in confi data is ",posi_na_con)
+  #cat('\n')
   
   
   data_con[[education_varname]][which(p_education_string_con=='*')] <- NA_value
@@ -951,7 +953,8 @@ conf_LinA <- function(data, gender_varname, age_varname,education_varname,state_
     
   }
   
-
+  # #cat("\n the education NA in original data is ",which(p_education_string=="*"))
+  # #cat("\n the education NA in confi data is ",which( data_con[[education_varname]]==NA_value))
   cat('total education:     ',diff, ' respondants were suppressed \n')
 
   #cat('\n')
@@ -967,7 +970,9 @@ conf_LinA <- function(data, gender_varname, age_varname,education_varname,state_
   }
   cat('total age:           ',diff, ' respondants were suppressed \n')
 
-
+  # #cat("\n the age NA in original data is ",which(p_age_group2_string=="*"))
+  # #cat("\n the age NA in confi data is ",which(data_con[[age_varname]]==NA_value))
+  #cat('\n')
   
   data_con[[state_varname]][which(p_state_string_con=='*')] <- NA_value
   posi_na_ori <- which(p_state_string=="*")
@@ -978,6 +983,10 @@ conf_LinA <- function(data, gender_varname, age_varname,education_varname,state_
   }
   cat('total state:         ',diff, ' respondants were suppressed \n')
 
+  # #cat("\n the state NA in original data is ",which(p_state_string=="*"))
+  # #cat("\n the state NA in confi data is ",which(data_con[[state_varname]]==NA_value))
+  #cat('\n')
+  # results <- list('data_confi' = data_con,"flag" = flag_need_another_iteration)
   
   out <- list()  # just for return 2 entities
   out$data_con <- data_con

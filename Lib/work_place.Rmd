@@ -1,0 +1,120 @@
+
+---
+title: "Data Dictionary: Cohort 1_ADA_wave 14"
+author: ""
+date: ""
+output: word_document
+---
+```{r}
+
+library(haven);        # To read .SAV data 
+library(labelled);     # To extarct information from the data
+library(flextable);    # To create tables with merged rows for designated columns
+library(stringr)
+# library(officer);      # To incorporate some of the microsoft 
+
+data <- read_sav('../Data/SRC2793 ADA Final 04-11-2022.sav')
+```
+
+
+```{r}
+spss_value_labels <- function(var){
+  
+  posi <- which(sapply(names(data), function(x) grepl(x, var_label(var))))
+  Line_1 <- paste0('ADD VALUE LABELS ',names(posi)) %>% 
+    paste0('\n')
+  cat(Line_1)
+  vals<- val_labels(var)
+  for (i in 1:(length(vals)-1)){
+    Lines <- paste0(vals[i]," '") %>% 
+      paste0(names(vals)[i]) %>% 
+      paste0("'\n")
+
+    cat(Lines)
+  }
+    Lines <- paste0(vals[i+1]," '") %>% 
+      paste0(names(vals)[i+1]) %>% 
+      paste0("'.\n") %>% 
+      paste0('EXECUTE.\n')
+  cat(Lines)
+}
+
+
+
+spss_value_labels(data$A1)
+
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+
+
+
+#####################################################################################################################
+#########################           Read data (input by the archivist )              ################################
+#####################################################################################################################
+
+data <- haven::read_sav("Z:\\assda\\publish\\ANU\\Archivists\\Tina\\100119 Youth Research Centre Life Patterns Project 1998-2017\\Original\\Cohort 1_ADA_wave 14.sav")
+
+#####################################################################################################################
+################         Collect information from the data file (No change)           ###############################
+#####################################################################################################################
+
+var_info <-   look_for(data) %>%
+              lookfor_to_long_format() %>%
+              convert_list_columns_to_character()
+
+#####################################################################################################################
+###############    Get necessary information to create dictionary, The information included here ####################
+###                Serial number, name of the variable, variable label and value levels 
+###############    Other information include: 
+###                Type of variable, Number of missing cases, Number of unique values and range
+###############    Archivist can include extra information here if needed                        ####################  
+#####################################################################################################################
+
+
+dictionary            <- var_info [,c(1,2,3,6)]
+colnames (dictionary) <- c( 'Serial', 'Name', 'Variable_label', 'Value_labels')
+dictionary            <- data.frame (dictionary)
+fr                    <- lapply(data, function(x) { return(questionr::freq(x)) })
+Frequency                 <- rep (NA, times = nrow (dictionary))
+varName               <- unique(dictionary$Name) ; m <- 0
+
+for (i in 1: length (varName )){
+  d1 <- subset (dictionary, dictionary$Name ==  varName [i] ); n1 <- nrow (d1)
+  f1 <- data.frame(fr[[i]]); f2 <- as.numeric(unlist(f1[1]));
+       for (j in 1: n1){   Frequency  [m+j] <- f2[j]} 
+            m <- m + n1
+}
+
+dictionary <- cbind (dictionary, Frequency)
+dictionary$Frequency  = ifelse(is.na(dictionary$Value_labels), NA, Frequency)
+
+
+#####################################################################################################################
+###############         Ctreate and format flextable object to print in Markdown                 ####################
+#####################################################################################################################
+
+dictionary <- flextable(
+              dictionary, 
+              col_keys = c(  'Serial', 'Name', 'Variable_label', 'Value_labels', 'Frequency'))
+
+dictionary  <- merge_v           (dictionary , j = ~ Serial + Name + Variable_label)
+dictionary  <- border_inner_h    (dictionary , part="all", border = fp_border(color="gray"))
+dictionary  <- align             (dictionary , align = "left", part = "body")
+dictionary  <- valign            (dictionary , valign = "top", part = "body")
+
+dictionary  <- color             (dictionary , color = "black", part = "all")
+
+flexPrintFun <- function (x){
+                x%>%
+                width (j = 1, width = 0.50)%>%
+                width (j = 2, width = 1.00)%>%
+                width (j = 3, width = 3.50)%>%
+                width (j = 4, width = 2.00)%>%
+                hrule (rule = "auto", par = "all") }
+
+
+flexPrintFun (dictionary )  
+```
+

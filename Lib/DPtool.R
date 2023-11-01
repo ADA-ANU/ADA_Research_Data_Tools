@@ -1,3 +1,57 @@
+# this file is mainly used for LinA panel data, will find generality with other data
+
+#' Title
+#' 
+#' @param colour
+#' @param n
+#' @param lighter
+#' 
+#' @return
+#' @export
+#' 
+#' @examples
+#' 
+#' 
+#' 
+#' 
+#' 
+
+# group_numberic_data <- function(data,bins,include_head=F,include_tail=T) {
+# 
+#   for (i in 1:(length(bins)-1)){
+#     posi <- which(data<=(bins[i+1]-1 )& data>=bins[i])
+#     age_data[posi] <- i
+#   }
+# 
+# 
+# }
+
+####################### Draft for group 2 or 3 values into one category.
+# group_value <- function(data_var,from_value,to_value,new_value_label,refresh_value_code=T,refresh_missing_value_code=F){#  if you would like to code the categories from 1, set TRUE
+#   value_labels <- attributes(data_var)$labels 
+#   
+# }
+# 
+# group_value(data[[p_gender_name_ori]])
+# 
+# posi_var_need <- value_labels %in% missing_value_in_original_gender
+# if (refresh_value_code){
+#   n <- length(which(!posi_missing))
+#   new_value <- c(1:n,)
+# } else{
+#   old_value <- as.vector(attributes(data[[p_gender_name_ori]])$labels)[!posi_missing]  
+# }
+# 
+# 
+# value_labels <- c(1,2,3,4,-97) %>% 
+#   as.numeric()
+# names(value_labels) <- c('123123','asdasd','asdasdad','asdasd','asdasd')
+# 
+# age_data <- labelled(as.double(age_data),labels = value_labels,label = varible_label)
+# 
+# attributes(age_data)$format.spss <- format_spss
+###################################################################################
+
 
 
 value_label_comparison<- function(d1,d2,d3=c()){
@@ -22,8 +76,8 @@ value_label_comparison<- function(d1,d2,d3=c()){
   a3 <- rep('',10000)
 
   
-  a1[unname(val_labels(d1))] <- names(val_labels(d1))
-  a2[unname(val_labels(d2))] <- names(val_labels(d2))
+  a1[unname(labelled::val_labels(d1))] <- names(labelled::val_labels(d1))
+  a2[unname(labelled::val_labels(d2))] <- names(labelled::val_labels(d2))
 
   if (is_empty(d3)){
 
@@ -31,7 +85,7 @@ value_label_comparison<- function(d1,d2,d3=c()){
 
   }else{
 
-    a3[unname(val_labels(d3))] <- names(val_labels(d3))
+    a3[unname(labelled::val_labels(d3))] <- names(labelled::val_labels(d3))
     view(data.frame(a1,a2,a3))
   }
   
@@ -153,7 +207,6 @@ age_groups <- function(age_data,age_bins,varible_label,format_spss='F3.0',missin
   #' 
   #' @examples
   #' 
-  age_data <- as.vector(data$p_age)
 
   missing_posi <- which(age_data==missing_value)
 
@@ -190,9 +243,6 @@ age_groups <- function(age_data,age_bins,varible_label,format_spss='F3.0',missin
 freq_table <- function(data,variable_name,graph=F){
   #' Title
   #' 
-  #' @param colour
-  #' @param n
-  #' @param lighter
   #' 
   #' @return
   #' @export
@@ -256,6 +306,69 @@ add_new_value<- function(data,var,value_label,value,sort=T){
   }
   data
 }
+
+find_substring_var_label <- function(data,substring,print=F){
+  idx <- which(as.logical(lapply(data, function(e) grepl(substring, var_label(e),ignore.case = F))))
+  
+  if (print){
+    cat(paste(names(data)[idx],collapse = "\n"))
+  }  
+  return(names(data)[idx])
+}
+
+replace_substring_var_labels <- function(data,from_substring,to_substring='',print_spss_code=T){
+  var <- find_substring_var_label(data,from_substring)
+  if (print_spss_code){
+    for (i in var){
+      line <- paste0('VARIABLE LABELS ',i) %>% 
+        paste0(' "') %>% 
+        paste0(gsub(from_substring, to_substring, var_label(data[[i]]))) %>% 
+        paste0('".\n')
+      cat(line)
+    }
+  }
+  return (gsub(from_substring, to_substring, var_label(data)))
+}
+
+locate_substring_var_label <- function(data,substring){
+  return(unlist(lapply(data, function(e) c(regexpr(substring, var_label(e))))))
+}
+
+
+
+############################
+
+
+
+
+find_undefined_value <- function(data,include_string=F,print=F){
+  idx <- lapply(data, check_undefined_value)
+  var_undefinedvalue <- names(data)[which(unname(unlist(idx)))]
+  if (print){
+    cat(paste(var_undefinedvalue,collapse = "\n"))  
+  }
+  
+  return (var_undefinedvalue)
+}
+
+
+check_undefined_value <- function(data,include_string=F){
+  if (include_string){
+    return (!all(na.omit(unique(data))%in% unname(attributes(data)$labels)) )
+  }else{
+    return ((!all(na.omit(unique(data))%in% unname(attributes(data)$labels))) & (!is.character(data))  )  
+  }
+  
+}
+
+
+
+
+locate_substring_var_label <- function(data,var_name,substring){
+  return (regexpr(substring, var_label(data[[var_name]])))
+}
+
+
 
 
 find_var_names_by_value <- function(data,value){
@@ -344,8 +457,8 @@ find_var_names_by_keyword <- function(data,value_name,mode='ambiguity'){
 
 convert_ch2double <-  function(data_var,spss_format=''){
   
-  values <- as.double(val_labels(data_var))
-  names(values) <- names(val_labels(data_var))
+  values <- as.double(labelled::val_labels(data_var))
+  names(values) <- names(labelled::val_labels(data_var))
   
   t <- data_var %>%
     as.vector()%>%
@@ -362,8 +475,8 @@ convert_ch2double <-  function(data_var,spss_format=''){
 
 convert_ch2int <-  function(data_var,spss_format=''){
   
-  values <- as.integer(val_labels(data_var))
-  names(values) <- names(val_labels(data_var))
+  values <- as.integer(labelled::val_labels(data_var))
+  names(values) <- names(labelled::val_labels(data_var))
   
   t <- data_var %>%
     as.vector()%>%
@@ -380,8 +493,8 @@ convert_ch2int <-  function(data_var,spss_format=''){
 
 convert_2ch <-  function(data_var,spss_format=''){
   
-  values <- as.character(val_labels(data_var))
-  names(values) <- names(val_labels(data_var))
+  values <- as.character(labelled::val_labels(data_var))
+  names(values) <- names(labelled::val_labels(data_var))
   
   t <- data_var %>%
     as.vector()%>%
@@ -428,17 +541,18 @@ update_values <- function(data,var,from_values,to_values,sort_flag=F){
   )
   
   regx <- paste(sapply(seq_along(from_values), function(x) sprintf("%d=%d", from_values[x], to_values[x])), collapse=";")
-  variable_label <- val_labels(data_t)
+  
   data_t <- data
+  variable_label <- labelled::val_labels(data_t)
   for (v in var){
     t <- data_t[[v]]
-    posi_from_value <- match(from_values,val_labels(t))
+    posi_from_value <- match(from_values,labelled::val_labels(t))
     posi_from_value <- posi_from_value[!is.na(posi_from_value)]
-    val_labels(t)[posi_from_value] <- to_values
+    labelled::val_labels(t)[posi_from_value] <- to_values
     
     
     if (sort_flag){
-      val_labels(t) <- sort(val_labels(t))
+      labelled::val_labels(t) <- sort(labelled::val_labels(t))
     }
     
     t   <- car::recode (t, regx)
@@ -600,3 +714,145 @@ update_value_labels <-  function(data,var,value_label_from,value_label_to){
   return(t)
   
 }
+
+get_data_frequency <-  function(var_info,fr){
+  
+  dictionary            <- var_info [,c(1,2,3,6)]
+  colnames (dictionary) <- c( 'Serial' ,'Name', 'Variable_label', 'Value_labels')
+  check_box <-  matrix(rep('',nrow (dictionary) ) ,ncol = 1)
+  
+  dictionary            <- data.frame (dictionary)
+  
+  Frequency             <- rep (NA, times = nrow (dictionary))
+  varName               <- unique(dictionary$Name) ; m <- 0
+  
+  for (i in 1: length (varName )){
+    d1 <- subset (dictionary, dictionary$Name ==  varName [i] ); n1 <- nrow (d1)
+    f1 <- data.frame(fr[[i]]); f2 <- as.numeric(unlist(f1[1]));
+    for (j in 1: n1){   Frequency  [m+j] <- f2[j]} 
+    m <- m + n1
+  }
+  
+  value <- sub(".*\\[([^][]+)].*", "\\1", dictionary$Value_labels)
+  value_l <- str_split_fixed(dictionary$Value_labels, "] ",n=2)[,2]
+  
+  
+  
+  dictionary <- cbind (dictionary[1:3],data.frame(value),data.frame(value_l), Frequency)
+  colnames (dictionary) <- c('Position', 'Variable','Label', 'Value','Value_labels', 'Frequency')
+  
+  # dictionary$Frequency  = ifelse(is.na(dictionary$Value_labels), NA, Frequency)
+  # dictionary <- cbind (dictionary[1],dictionary[1],dictionary[2:4], Frequency,check_box)
+  
+  
+  
+  
+  # colnames (dictionary) <- c( 'Variable','Position','Label', 'Value','Value_labels', 'Frequency')
+  dictionary$Frequency  <-  ifelse(is.na(dictionary$Value), '', Frequency)
+  dictionary$Value_labels  <-  ifelse(is.na(dictionary$Value), '', dictionary$Value_labels)
+  
+  dictionary$Value  <-  ifelse(is.na(dictionary$Value), '', dictionary$Value)
+  
+  return (as.data.frame(dictionary))
+}
+
+
+get_confidential_issue <- function(varLabel){
+  confidentiality_hash <- hash()
+  confidentiality_hash['DPII']    <-str_which  (varLabel, regex("(identi)|(ID)|(Name)|(name)|(Phone)|(phone)|(Mobile)|(mobile)",ignore_case = TRUE), negate = FALSE)
+  confidentiality_hash['Demo']     <-str_which  (varLabel, regex("(edu)|(gender)|(sex)|(age)|(state)",ignore_case = TRUE), negate = FALSE)
+  confidentiality_hash['Racial']   <- str_which  (varLabel,regex("(birth)|(born)|(country)|(place)|(origin)|(ethnic)|(speak)|(language)|(mother)|(father)|(ancestry)|(Identify)|(indigenous)|(torres strait)|(islander)|(aboriginal) ",ignore_case = TRUE) , negate = FALSE) 
+  confidentiality_hash['Political']<- str_which  (varLabel,regex("(member)|(align)|(political)|(party)|(left)|(right)|(election)|(vote)",ignore_case = TRUE) , negate = FALSE) 
+  confidentiality_hash['Religious']<-  str_which  (varLabel,regex("(church)|(mosque)|(temple)|(synagogue)|(service)|(observe)|(practice)|(religion)",ignore_case = TRUE) , negate = FALSE)
+  confidentiality_hash['Sexual']   <- - str_which  (varLabel,regex("(identif)|(gay)|(lesbian)|(binary)|(queer)|(LGBT)|(orientation)|(practice)|(bisexual)|(transgender)|(intersex)|(asexual)|(pansexual)",ignore_case = TRUE) , negate = FALSE) 
+  confidentiality_hash['Criminal'] <- str_which  (varLabel,regex("(criminal)|(record)|(conviction)|(sentenced)|(drug)|(abuse)",ignore_case = TRUE) , negate = FALSE) 
+  confidentiality_hash['Health']   <- str_which  (varLabel,regex("(Health)|(Genetic)|(Ancestry)|(Disease)|(Chronic)|(Pain)|(Disability)|(disabled)|(Heart)|(kidney)|(lung)|(respiratory)|(COVID)",ignore_case = TRUE) , negate = FALSE)
+  # confidentiality_hash['Other']    <- NULL
+  # confidentiality_hash['All'] <- c( confidentiality_hash[['DPII']]      ,
+  #                                   confidentiality_hash[['Demo']]     ,
+  #                                   confidentiality_hash[['Racial']]   ,
+  #                                   confidentiality_hash[['Political']],
+  #                                   confidentiality_hash[['Religious']],
+  #                                   confidentiality_hash[['Sexual']]   ,
+  #                                   confidentiality_hash[['Criminal']] ,
+  #                                   confidentiality_hash[['Health']]   ,
+  #                                   # confidentiality_hash[['Other']]    ,
+  # 
+  # )
+  confidentiality_hash
+}
+
+
+first_letter_uppercase_grep <- function(paragraph){
+  
+  re <- c()
+  for (i in 1:length(paragraph)){
+  
+    sentences <- unlist(strsplit(paragraph[i], "\\. "))
+    if (grepl("^[0-9]", paragraph[i]) ){
+      
+      re <- c(re,F)
+    }else{
+      if (any(!grepl("^[A-Z]", sentences))){
+        re <- c(re,T)
+      }
+      else{
+        re <- c(re,F)
+      }
+    }
+    
+
+  }
+  re
+  
+}
+
+count_uppercase <- function(text) {
+  
+  words <- unlist(strsplit(text, "[[:punct:] ]"))
+  words <- words[words != ""]
+  uppercase_count <- str_count(words, "[A-Z]")
+  return(uppercase_count)
+}
+
+# first_uppercase_letter_grep <- function(text){
+#   
+# }
+
+uppercase_grep <- function(text,maxi_uppercase=2){
+  re <- c()
+  for (i in 1:length(text)){
+    
+    re <- c(re,any(count_uppercase(text[i])>maxi_uppercase))
+  }
+    
+  re
+}
+
+mid_uppercase_grep <- function(text){
+  grepl("[a-z]+[A-Z]+[a-z]+", text)
+}
+
+
+punctuation_grep <- function(text){
+  special_punctuation_pattern <- "[[:punct:]]"
+  grepl(special_punctuation_pattern, text)
+}
+
+# replace_punc <- function(puncs,punc_to,text)
+
+
+get_val_issue <- function(value_label_list){
+  value_quality_hash <- hash()
+  special_punctuation_pattern <- "[[:punct:]]"
+  value_quality_hash['Uppercase'] <- union(which(uppercase_grep(text=value_label_list)),which(first_letter_uppercase_grep(paragraph = value_label_list))) %>%
+    union(which(mid_uppercase_grep(value_label_list)))
+    
+    
+  value_quality_hash['Punctuation'] <- which(grepl(special_punctuation_pattern, value_label_list))
+  
+  value_quality_hash
+}
+
+
+
