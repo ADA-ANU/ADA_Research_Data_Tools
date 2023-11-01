@@ -33,7 +33,7 @@ save_tab <- tabPanel("Save Files",
                            checkboxInput(inputId = 'process_R', label = 'Process .R',value = T),
                            
                            
-                           downloadButton('Save spss data')
+                           downloadButton('save_spss_data_button')
                            
                            
 
