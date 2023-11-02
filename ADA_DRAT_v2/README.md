@@ -8,7 +8,7 @@
 For compatible reasons, we are going to use R 4.2.X and DT 0.2.5 
 
 ## Demo
-You can also using the link [ShinyApp.IO](https://67g7sg-weifanjiang0anu.shinyapps.io/ADA_DRATv2/), to have a try.
+You can also using the link [ShinyApp.IO](https://67g7sg-weifanjiang0anu.shinyapps.io/ADA_DRATv2/), to give it a try. And make sure your data is secure, you can use Demo data from Data folder.
 
 ## How to use
 
