@@ -18,10 +18,18 @@ Multiple files can be dragged and dropped onto the ‘Choose/Drop Files’ bar o
 
 ### Dictionary view
 Loaded data can then be viewed in the Data Dictionary screen. All variable and value information is displayed. 
-Users can refine the table using the search boxes at the top of each column. Users can copy the displayed table to the clipboard, or download the table as a CSV, Excel, or PDF Data Dictionary file.  
+Users can refine the table using the search boxes at the top of each column. Users can copy the displayed table to the clipboard or download the table as a CSV, Excel, or PDF Data Dictionary file.  
 
 
-### Variable View and Value View
+### Variable View 
 
 #### Sensitive data keyword search.  
-In the ‘Variable View’ screen, the DRAT will flag variables with categories of potentially sensitive data including questions about religion, racial identity, pollical affiliation, or criminal behaviour. 
+In the ‘Variable View’ screen, the DRAT will flag variables with categories of potentially sensitive data, including questions about religion, racial identity, political affiliation, or criminal behaviour.
+
+##### Indirect identifier variables
+
+### Value View
+
+##### Removing punctuation from labels
+
+##### Removing inconsistent uppercase text. 
