@@ -717,7 +717,7 @@ update_value_labels <-  function(data,var,value_label_from,value_label_to){
 
 get_data_frequency <-  function(var_info,fr){
   
-  dictionary            <- var_info [,c(1,2,3,6)]
+  dictionary            <- var_info [,c(1,2,3,7)]
   colnames (dictionary) <- c( 'Serial' ,'Name', 'Variable_label', 'Value_labels')
   check_box <-  matrix(rep('',nrow (dictionary) ) ,ncol = 1)
   
@@ -855,7 +855,7 @@ get_val_issue <- function(value_label_list){
 }
 
 
-function(var_name,val_num,val_names){
+spss_val_syntax <- function(var_name,val_num,val_names){
   t_str <- paste0('VALUE LABELS ',var_name)
   
   for (v in 1:length(val_num)){
@@ -863,6 +863,17 @@ function(var_name,val_num,val_names){
     
   }
   t_str <- paste0(t_str,'.\n')
+  t_str
+}
+
+
+spss_convert_syntax <- function(filename,postfix){
+  t_str <- paste0("SAVE TRANSLATE OUTFILE='",filename,'_STATA_',postfix,".dta'\n/TYPE=STATA\n/VERSION=12\n/EDITION=SE\n/MAP\n/REPLACE.\n\n\n")
+  
+  t_str <- paste0(t_str,'SAVE TRANSLATE OUTFILE="',filename,'_SAS_',postfix,'.sas7bdat"\n/TYPE=SAS\n/VERSION=9\n/PLATFORM=WINDOWS\n/ENCODING="UTF8"\n/MAP\n/REPLACE\n/VALFILE="',filename,'_SAS_',postfix,'.sas".\n\n')
+  
+  t_str <- paste0(t_str,'SAVE TRANSLATE OUTFILE="',filename,'_CSV_',postfix,'.csv"\n/TYPE=CSV\n/ENCODING="UTF8"\n/MAP\n/REPLACE\n/FIELDNAMES\n/CELLS=VALUES.\n')
+  
   t_str
 }
 

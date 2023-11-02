@@ -15,7 +15,10 @@ library (dplyr)              # Managing the functions using pipes %>%
 library (sjlabelled)         # Supports 'rename_at', 'var_labels' and 'add_value_labels' functions
 library (Hmisc)
 library(hash)
-source('../Lib/DPtool.R')
+library(markdown)
+library(shinythemes)
+source('./Lib/DPtool.R')
+# source('./Lib/spss_ez_work.R')
 # library(AMR)
 
 
@@ -212,6 +215,8 @@ shinyServer( function(input, output,session) {
         test_txt(append(test_txt(),'var info compeleted'))
         fr<- lapply(argparse$spss_data, function(x) { return(questionr::freq(x)) })
         argparse$data_freq <- get_data_frequency(argparse$var_info,fr)
+        
+        
         col_names_freq <- colnames(argparse$data_freq)
         
         argparse$data_freq <- cbind(rep('',nrow(argparse$data_freq)), argparse$data_freq )
@@ -761,42 +766,45 @@ shinyServer( function(input, output,session) {
   
   output$dt_value_view <- renderDT({
     # var_tb<- argparse$var_view_info[]
-
+    
     if (length(argparse$data_freq)>0) {
       dtable_value <- datatable(argparse$data_freq,
-                          rownames = FALSE,
-                          
-                          callback = JS(callback_dict),
-                          options = list(dom = 'PBlfrtip',
-                                         paging = FALSE,
-                                         rowGroup = list(dataSrc=c(3,4)),
+                                rownames = FALSE,
+                                
+                                callback = JS(callback_dict),
+                                options = list(dom = 'PBlfrtip',
+                                               paging = FALSE,
+                                               rowGroup = list(dataSrc=c(3,4)),
+                                               
+                                               columnDefs = list(
+                                                 list(visible=FALSE, targets=c(0,2,3,4)),
+                                                 list(searchPanes = list(show = FALSE), targets = 2:7)
+                                                 # list(targets = 0, orderable = FALSE, className = "select-checkbox"),
+                                                 # list(className = 'dt-center', targets = "_all")
+                                               ),
+                                               buttons =
+                                                 list(c('selectAll', 'selectNone'),'copy', 'print', list(
+                                                   extend = 'collection',
+                                                   buttons = c('csv', 'excel', 'pdf'),
+                                                   text = 'Download table as'
+                                                 )
+                                                 
+                                                 
+                                                 ),
 
-                                         columnDefs = list(
-                                           list(visible=FALSE, targets=c(0,2,3,4)),
-                                           list(searchPanes = list(show = FALSE), targets = 2:7)
-                                           # list(targets = 0, orderable = FALSE, className = "select-checkbox"),
-                                           # list(className = 'dt-center', targets = "_all")
-                                         ),
-                                         buttons =
-                                           list(c('selectAll', 'selectNone'),'copy', 'print', list(
-                                             extend = 'collection',
-                                             buttons = c('csv', 'excel', 'pdf'),
-                                             text = 'Download table as'
-                                           )
-                                           
-                                           
-                                           ),
-                                         select = list(style = 'os', items = 'row')
+                                               select = list(style = 'os', items = 'row')
+                                               
+                                ),
+                                extensions = c( 
+                                   'Select',
+                                                'SearchPanes',
+                                                'Buttons','RowGroup'),
+                                selection = 'none'
 
-                          ),
-                          extensions = c( 'Select',
-                                        'SearchPanes',
-                                         'Buttons','RowGroup'),
-                          selection = 'none'
-
+                                
       )
-
-
+      
+      
       path <- './js/' # folder containing the files dataTables.cellEdit.js
       # and dataTables.cellEdit.css
       dep <- htmltools::htmlDependency(
@@ -1295,6 +1303,12 @@ shinyServer( function(input, output,session) {
 
   })
   
+  output$save_spss_version <- renderUI({
+    
+    textInput("spss_file_version", "Version/postfix",value = 'General_v1')
+    
+  })
+  
   output$save_file_summary <- renderText({
     file_summary_str <- 'Data_processing_log.txt\n'
     if (input$save_sav){
@@ -1379,7 +1393,7 @@ shinyServer( function(input, output,session) {
           
           # print(extracted_values_list)
           deleted_index <- which(changes_var$updated_cols==-1)
-
+          
           t_cols<- changes_var$updated_cols
           t_cols[deleted_index] <- rep(4,length(deleted_index))
           
@@ -1406,16 +1420,16 @@ shinyServer( function(input, output,session) {
             OriginalValue = extracted_values_list,
             ChangeTo = changes_var$updated_values
           )
-
+          
           cat('Variable changes info:\n', file = log_file_path,append = T)
           write.table(updated_info, file = log_file_path, append = TRUE, sep = "\t", col.names = TRUE)
           cat('\n\n\n', file = log_file_path,append = T)
           # extracted_values_list
         } else {
           cat('Variable changes info: No changes recorded yet.\n\n\n', file = log_file_path,append = T)
-
+          
         }
-
+        
         print('log saved')
         
         if (input$save_sav){
@@ -1424,14 +1438,14 @@ shinyServer( function(input, output,session) {
           # print(save_sav_filepath)
           export_file_list <- c(export_file_list,save_sav_filepath)
           write_sav(spss_data_save,save_sav_filepath)
-
+          
         }
         if (input$save_stata){
           save_filepath<- paste0(input$spss_file_name,'_STATA_',input$spss_file_version,'.dta')
           # print(save_filepath)
           export_file_list <- c(export_file_list,save_filepath)
           write_dta(spss_data_save,save_filepath)
-
+          
         }
         if (input$save_sas){
           
@@ -1440,36 +1454,36 @@ shinyServer( function(input, output,session) {
           export_file_list <- c(export_file_list,save_filepath)
           write_sas(spss_data_save,save_filepath)
           
-
+          
         }
         if (input$save_csv){
           save_filepath<- paste0(input$spss_file_name,'_CSV_',input$spss_file_version,'.csv')
           # print(save_filepath)
           export_file_list <- c(export_file_list,save_filepath)
           write_csv(spss_data_save,save_filepath)
-
+          
         }
-      
+        
         if (input$process_sps){
           # cat(file,'\n')
           # spss_syntax_t <- paste0("cd ' ",file_path_sans_ext(file),"'. \n\n")
           
-          format_convert_path <- paste0(input$spss_file_name,'_processing_syntax.sps')
-          cat(paste0("cd '[ CHANGE THIS TO PATH DATA STORE]'. \n\n"),file = format_convert_path )
+          spss_proc_path <- paste0(input$spss_file_name,'_processing_syntax.sps')
+          cat(paste0("cd '[ CHANGE THIS TO PATH DATA STORE]'. \n\n"),file = spss_proc_path )
           
           
-          # cat("GET FILE='",paste0(input$spss_file_name,'_SPSS_',input$spss_file_version,'.sav') ,"'.\n",file = format_convert_path,append = T)
-          cat("GET FILE='",argparse$dataset_name,".sav'.\n",file = format_convert_path,append = T)
-          cat("DATASET NAME dataset1 WINDOW=FRONT.\n",file = format_convert_path,append = T)
-          cat("DATASET ACTIVATE dataset1.\n\n\n",file = format_convert_path,append = T)
+          # cat("GET FILE='",paste0(input$spss_file_name,'_SPSS_',input$spss_file_version,'.sav') ,"'.\n",file = spss_proc_path,append = T)
+          cat("GET FILE='",argparse$dataset_name,".sav'.\n",file = spss_proc_path,append = T)
+          cat("DATASET NAME dataset1 WINDOW=FRONT.\n",file = spss_proc_path,append = T)
+          cat("DATASET ACTIVATE dataset1.\n\n\n",file = spss_proc_path,append = T)
           
           
           
           if(length(changes_val$updated_rows)>0){
             
             
-            # cat(paste0("cd ' ",tools::file_path_sans_ext(file),"'. \n\n"),file = format_convert_path )
-
+            # cat(paste0("cd ' ",tools::file_path_sans_ext(file),"'. \n\n"),file = spss_proc_path )
+            
             
             posi = argparse$data_freq[changes_val$updated_rows,3]
             # cat(posi)
@@ -1481,7 +1495,7 @@ shinyServer( function(input, output,session) {
               idx <- which(argparse$data_freq[,3] == posi[i])
               cat(spss_val_syntax(argparse$var_name_ori[posi[i]],
                                   val_num = argparse$data_freq[idx,6],
-                                  val_names = argparse$data_freq[idx,7]),file = format_convert_path,append = T)
+                                  val_names = argparse$data_freq[idx,7]),file = spss_proc_path,append = T)
               
               # argparse$spss_syntax_var <- c(argparse$spss_syntax_var, spss_val_syntax(argparse$var_name_ori,
               # val_num = argparse$data_freq[idx,6],
@@ -1495,34 +1509,53 @@ shinyServer( function(input, output,session) {
           
           if(length(changes_var$updated_rows)>0){
             
-            cat('\n',argparse$spss_syntax_var,file = format_convert_path,append = T)
+            cat('\n',argparse$spss_syntax_var,file = spss_proc_path,append = T)
+            
           }
+          cat('\n',spss_convert_syntax(input$spss_file_name,input$spss_file_version),file = spss_proc_path,append = T) 
           
           
-          export_file_list <- c(export_file_list,format_convert_path)
+          export_file_list <- c(export_file_list,spss_proc_path)
         }
-
-        # if (input$translation_sps){
-        #   file_summary_str <- c(export_file_list, paste0(file_summary_str,input$spss_file_name,'_format_convert.sps\n'))
-        #   
-        # }
+        
+        if (input$translation_sps){
+          save_sav_filepath<- paste0(input$spss_file_name,'_SPSS_',input$spss_file_version,'.sav')
+          format_convert_path <- paste0(input$spss_file_name,'_format_convert.sps')
+          
+          cat(paste0("cd '[ CHANGE THIS TO PATH DATA STORE]'. \n\n"),file = format_convert_path )
+          
+          
+          
+          cat("GET FILE='",save_sav_filepath,"'.\n",file = format_convert_path,append = T)
+          cat("DATASET NAME dataset1 WINDOW=FRONT.\n",file = format_convert_path,append = T)
+          cat("DATASET ACTIVATE dataset1.\n\n\n",file = format_convert_path,append = T)
+          
+          
+          
+          
+          cat('\n',spss_convert_syntax(input$spss_file_name,input$spss_file_version),file = format_convert_path,append = T) 
+          
+          
+          export_file_list <- c(export_file_list, format_convert_path)
+          
+        }
         # 
         # 
         #   
-            
-          
-            
-            
-            
-          
-          # # print(knit_filelist)
-          # print(file)
-          # Create a ZIP file containing the generated .docx files
-          zip(zipfile = file, files = export_file_list)
-          
-          
-          
-        })
+        
+        
+        
+        
+        
+        
+        # # print(knit_filelist)
+        # print(file)
+        # Create a ZIP file containing the generated .docx files
+        zip(zipfile = file, files = export_file_list)
+        
+        
+        
+      })
       
     },
     contentType = "application/zip"

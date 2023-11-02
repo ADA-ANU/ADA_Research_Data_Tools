@@ -20,17 +20,24 @@ save_tab <- tabPanel("Save Files",
                            hr(),
                             
                            h4('Save the spss data'),
+                           
+                           uiOutput("save_spss_name"),
+                           uiOutput("save_spss_version"),
                            checkboxInput(inputId = 'save_sav',label = 'Save as .spss',value = T),
-                           checkboxInput(inputId = 'save_stata',label = 'Save as .dta',value = T),
-                           checkboxInput('save_sas',label = 'Save as .sas',value = T),
-                           checkboxInput('save_stata',label = 'Save as .dta',value = T),
-                           checkboxInput('save_csv',label = 'Save as .csv',value = T),
+                           checkboxInput(inputId = 'save_stata',label = 'Save as .dta',value = F),
+                           checkboxInput('save_sas',label = 'Save as .sas',value = F),
+                           checkboxInput('save_stata',label = 'Save as .dta',value = F),
+                           checkboxInput('save_csv',label = 'Save as .csv',value = F),
+                           
+                           # textInput(inputId = 'spss_file_name')
+                           # spss_file_version
+                           # 
                            # br(),
                            h5('Save blog and processing syntax'),
                            
                            checkboxInput(inputId = 'translation_sps', label = 'convert format .sps',value = T),
                            checkboxInput(inputId = 'process_sps', label = 'Process .sps',value = T),
-                           checkboxInput(inputId = 'process_R', label = 'Process .R',value = T),
+                           # checkboxInput(inputId = 'process_R', label = 'Process .R',value = T),
                            
                            
                            downloadButton('save_spss_data_button')
@@ -44,6 +51,9 @@ save_tab <- tabPanel("Save Files",
                            verbatimTextOutput('save_var_summary'),
                            h4('Changes in value lable'),
                            verbatimTextOutput('save_val_summary'),
+                           h4('Files going to be saved'),
+                           verbatimTextOutput('save_file_summary'),
+                           
                          )
                        )
                        
