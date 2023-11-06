@@ -1,7 +1,7 @@
 
 # ADA-Research-Data-Tools
 
-R Code repository for Data Archivists, this including Data processing and basic functions build by R. 
+R Code repository for Data Archivists, this including Data processing, basic functions, and a Data harmonisation R shiny app build by R. 
 
 <!-- PROJECT SHIELDS -->
 ![GitHub repo size](https://img.shields.io/github/languages/code-size/ADA-ANU/ADA_R_Scripts)
@@ -15,23 +15,23 @@ R Code repository for Data Archivists, this including Data processing and basic 
 <br />
 
 <p align="center">
-  <a href="https://github.com/ADA-ANU/ADA-R-Lib">
+  <a href="https://github.com/ADA-ANU/ADA_Research_Data_Tools">
     <img src="Images/logo.jpg" alt="Logo" height="200">
   </a>
 
-  <h3 align="center">ADA-R-Lib</h3>
+  <h3 align="center">ADA-Research-Data-Tools</h3>
   <p align="center">
     Please read README file to get started.
-    <br />
-    <a href="https://github.com/ADA-ANU/ADA-R-Lib/blob/main/README.md"><strong> Expolor Documemtations »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/ADA-ANU/ADA-R-Lib">Find Demo</a>
-    ·
-    <a href="https://github.com/ADA-ANU/ADA-R-Lib/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/ADA-ANU/ADA-R-Lib/issues">Propose a New Feature</a>
-  </p>
+<!--     <br /> -->
+<!--     <a href="https://github.com/ADA-ANU/ADA-R-Lib/blob/main/README.md"><strong> Expolor Documemtations »</strong></a> -->
+<!--     <br /> -->
+<!--     <br /> -->
+<!--     <a href="https://github.com/ADA-ANU/ADA-R-Lib">Find Demo</a> -->
+<!--     · -->
+<!--     <a href="https://github.com/ADA-ANU/ADA-R-Lib/issues">Report Bug</a> -->
+<!--     · -->
+<!--     <a href="https://github.com/ADA-ANU/ADA-R-Lib/issues">Propose a New Feature</a> -->
+<!--   </p> -->
 
 </p>
 
@@ -40,11 +40,11 @@ R Code repository for Data Archivists, this including Data processing and basic 
 ## Table of Contents
 
 - [💻 Getting Started](#getting-started)
-  - [Setup](#setup)
   - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
   - [Usage](#usage)
   - [Run tests](#run-tests)
-  - [Deployment](#triangular_flag_on_post-deployment)
+
 - [📝 Release History](#Release-History)
 - [👥 Authors](#authors)
 - [🤝 Contributing](#contributing)
@@ -65,9 +65,9 @@ R Code repository for Data Archivists, this including Data processing and basic 
 *Please note that Anaconda may not have the latest version for R and Rstudio, which will cause package install failure.*
 
 
-### 2. Prerequisites
+### 2. Prerequisites<a name="prerequisites"></a>
 
-In order to run this project you need the following dependencies, version of R is **4.2.1**, Lower version of R may cause incompatible error:
+In order to run this project you need the following dependencies, version of R is **4.2.X** and DT **0.2.5** , Lower version of R may cause incompatible error:
 
 ```R
 library(haven);             # Imports and export SPSS (.sav) data
@@ -83,24 +83,39 @@ library(car)                # To recode or group values
 library(reshape2)           # To reshape metrix
 library(gmodels)            # Various R Programming Tools for Model Fitting
 library(epiDisplay)         # For data exploration and result presentation
+library(DT)                 # For Data demostration
+library(shiny)              # Web application
+    
 ```
 you can install them by using:
 
 
 ```R
-install.packages(c('haven','labelled','tidyverse','dplyr','flextable','officer','stringr','sjlabelled','foreign','car','reshape2','gmodels','epiDisplay'))
+install.packages(c('haven','labelled','tidyverse','dplyr','flextable','officer','stringr','sjlabelled','foreign','car','reshape2','gmodels','epiDisplay','shiny','remotes'))
 ```
-It´s important to check for packages updates. It´s in tool `menu`->`check for package updates`->`choose the packages`. If you got Error: package or namespace load failed because of the out of updated library,such as 'htmltools', 'vctr'
 
-### 3. Setup
+particular in Rshiny, DT 0.25 version will be used to prevent incompatible with CellEdits.
+    
+```R
 
-After you copied the data archive folder to your archivist folder, Clone this repository to Processing folder under Dataset folder:
+remove.packages("DT") 
+
+remotes::install_version("DT", version = "0.25")     
+```
+    
+    
+
+### 3. Setup<a name="setup"></a>
+
+Clone this repository to Processing folder under Dataset folder:
 
 For example: **Download** the whole repository and extract at your working folder
 
 
 
-### 4. Pipline
+### 4.Usage<a name="usage"></a>
+
+#### R Scripts
 
 #### 0.  Shell dataset and processing report
 Archive work flow, Before this, you already recived data from depositor, and got a consent for ADA processing report for ADA facilitated dataset, For more infomation refer [Shell Dataverse wiki](https://wiki.ada.edu.au/index.php/Creation_of_%27Shell_Dataverse_and_Dataset%27), [Data Processing Wiki](https://wiki.ada.edu.au/index.php/Data_Processing). Generating Data quality checks, Data confidentiality checks and Data frequency documents for identifying different kinds of issues.
@@ -202,6 +217,15 @@ Example command:
 
 <!-- AUTHORS -->
 
+### DART - R shiny Applictaion
+You can using the link [ShinyApp.IO](https://67g7sg-weifanjiang0anu.shinyapps.io/ADA_DRATv2/) to try. And make sure your data is secure, you can use [Demo data](https://github.com/ADA-ANU/ADA_Research_Data_Tools/tree/main/Data) from Data folder.
+
+Full list of documentation can be found on [ADA_DRAT_v2](https://github.com/ADA-ANU/ADA_Research_Data_Tools/blob/main/README.md)
+
+
+
+
+
 ## Release History
 
 
@@ -211,6 +235,8 @@ Example command:
     * LinA confidentialse report was modified, including wording, content, grammar,summary
 
 
+* 0.1.0
+    * Drat tool, Rshiny application was updated
 
 
 
