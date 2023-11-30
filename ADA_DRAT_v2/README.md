@@ -118,8 +118,7 @@ DRAT will also create SPSS syntax that converts .sav data to .sas7bdat .csv and 
 
 ## Example case
 
-See [ANUPoll training data]()
+See [ANUPoll training data](https://github.com/ADA-ANU/ADA_Research_Data_Tools/tree/main/Data)
 
-Goto main page:[ShinyApp.IO](https://67g7sg-weifanjiang0anu.shinyapps.io/ADA_DRATv2/), or press `Run App` on top of RStudio.
 
 
