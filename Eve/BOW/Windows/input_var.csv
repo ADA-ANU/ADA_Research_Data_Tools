@@ -1,0 +1,58 @@
+VariableName,VariableLabel
+elcnwsp,Followed election news in the newspapers
+sex,Sex
+,Sexual orientation
+yearbirth,Year of birth
+age,Age (derived)
+agecat,Age categories (10 year groups - derived)
+,Age categories (10 year groups - derived)
+,Area of residence
+,Year in this area
+,Length of residence in state-territory
+marital,Marital Status
+class,Social class
+mbphone,How many mobile phones
+volwork,Over the last 12 months did you spend any time doing voluntary work through an organisation or group
+leftschool,Age left school
+,Highest grade of school completed
+schlsect,School sector of secondary education - public or private
+trtedu,Number of years of tertiary education
+hiqual,Highest qualification obtained since leaving school
+schcecch,School sector of secondary education of child - public or private
+mainstat,Main activity in past week
+mainstot,"Last week, what were you mainly doing? (other specify)"
+work4pay,Do you currently or have you ever worked for pay?
+occupation,Occupation
+,Occupation - ASCO2
+,Occupation (ANZSCO code)
+,Occupation (ANZSCO code)
+,Extended-Occupation (ANZSCO 4 digit)
+,No. of employees
+,Number employed in workplace
+opos,Position in organisation
+empsect,Employer sector
+supother,Supervisory responsibility
+,Number supervised
+unionmem,Belong to a trade union or staff association
+,Years belonged to trade union
+,Can choose trade union membership
+,How are wages and conditions set
+,How prefer wages and conditions set
+,Written a letter - part of job involvement
+,Gone to a meeting where you took part in making decisions - part of job involvement
+,Planned or chaired a meeting - part of job involvement
+,Given a presentation or speech - part of job involvement
+mocob,Country of Birth - mother
+xmocob,Country of Birth - mother - extended
+facob,Country of Birth - father
+xfacob,Country of Birth - father - extended
+,Year came to Australia - mother
+,Year came to Australia - father
+,Citizenship - Mother (1st listed)
+,Citizenship - Mother (2nd listed)
+,Citizenship - Father (1st listed)
+,Citizenship - Father (2nd listed)
+,Age father left school
+,Age mother left school
+faptid14,Fathers political preference at R Age 14
+moptid14,Mothers political preference at R Age 14
