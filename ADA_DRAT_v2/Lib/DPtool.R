@@ -717,7 +717,7 @@ update_value_labels <-  function(data,var,value_label_from,value_label_to){
 
 get_data_frequency <-  function(var_info,fr){
   
-  dictionary            <- var_info [,c(1,2,3,7)]
+  dictionary            <- var_info [,c(1,2,3,6)]
   colnames (dictionary) <- c( 'Serial' ,'Name', 'Variable_label', 'Value_labels')
   check_box <-  matrix(rep('',nrow (dictionary) ) ,ncol = 1)
   
@@ -876,5 +876,3 @@ spss_convert_syntax <- function(filename,postfix){
   
   t_str
 }
-
-
