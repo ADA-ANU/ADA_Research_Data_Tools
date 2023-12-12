@@ -7,7 +7,7 @@ library(markdown)
 # source("util.R")
 # source("spss_data_page.R")
 # source("metadata_page.R")
-source("readme_page.R")
+# source("readme_page.R")
 source("data_page.R")
 source("save_page.R")
 
