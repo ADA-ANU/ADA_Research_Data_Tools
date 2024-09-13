@@ -1,9 +1,14 @@
-
 ---
-title: "Data Dictionary: "
-author: ""
-date: ""
+title: "ADA Data Dictionary : `r params$doc_title`"
+author: "`r params$author`"
+date: "`r format (Sys.time(), format='%d-%b-%Y')`" 
 output: word_document
+params:
+  data_sav: NA
+  doc_title: NA
+  author: NA
+
+  
 ---
 
 
@@ -17,14 +22,15 @@ library(officer);      # To incorporate some of the microsoft
 #####################################################################################################################
 #########################           Read data (input by the archivist )              ################################
 #####################################################################################################################
-
-data <- haven::read_sav("../Data/.sav")
+# data <- haven::read_sav("Z:\\assda\\publish\\ANU\\Archivists\\Tina\\Generation 2022 Schools data\\Processing_2022-12-20\\3_Generation_2022_full.sav")
+# data <- haven::read_sav(path_sav)
+# data <- haven::read_sav("../Data/SRC2843 coded data ADA 08-09-2022.sav")
 
 #####################################################################################################################
 ################         Collect information from the data file (No change)           ###############################
 #####################################################################################################################
 
-var_info <-   look_for(data) %>%
+var_info <-   look_for(params$data_sav) %>%
               lookfor_to_long_format() %>%
               convert_list_columns_to_character()
 
@@ -38,9 +44,12 @@ var_info <-   look_for(data) %>%
 
 
 dictionary            <- var_info [,c(1,2,3,6)]
+# write.csv(as.data.frame(dictionary),file = 'test.csv',row.names = FALSE)
+
+
 colnames (dictionary) <- c( 'Serial', 'Name', 'Variable_label', 'Value_labels')
 dictionary            <- data.frame (dictionary)
-fr                    <- lapply(data, function(x) { return(questionr::freq(x)) })
+fr                    <- lapply(params$data_sav, function(x) { return(questionr::freq(x)) })
 Frequency                 <- rep (NA, times = nrow (dictionary))
 varName               <- unique(dictionary$Name) ; m <- 0
 
@@ -53,6 +62,8 @@ for (i in 1: length (varName )){
 
 dictionary <- cbind (dictionary, Frequency)
 dictionary$Frequency  = ifelse(is.na(dictionary$Value_labels), NA, Frequency)
+
+write.csv(as.data.frame(dictionary),file = paste0(paste0('ADA Data Dictionary Freqency ',params$doc_title),'.csv'),row.names = FALSE)
 
 
 #####################################################################################################################

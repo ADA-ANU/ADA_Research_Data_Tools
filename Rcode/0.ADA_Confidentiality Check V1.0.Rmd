@@ -1,0 +1,562 @@
+---
+title: "ADA Confidentiality Check Report: `r params$doc_title`"
+author: "`r params$author`"
+date: "`r format (Sys.time(), format='%d-%b-%Y')`" 
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+params:
+  data_sav: NA
+  doc_title: NA
+  author: NA
+
+
+  
+  
+  
+---
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+# reference:https://anu365.sharepoint.com/:w:/r/sites/CSRM/_layouts/15/Doc.aspx?sourcedoc=%7B87C010D7-F766-474D-B546-BC549834E366%7D&file=Confidentiality%2002%2002%202022.docx&action=default&mobileredirect=true
+
+####################################################################################################
+################              Load packages                        #################################
+####################################################################################################
+library (tidyverse)
+library(flextable)          # Creates tables 
+library(haven);             # Imports SPSS (.sav) data
+library(labelled);          # Calls value label, variable label and other information of the data
+library(officer)            # Helps using various micro-soft office formats 
+library (spelling)          # For checking spelling error
+library (stringr)           # Looking for specific string ('word' or 'parts of word')
+library (dplyr)
+
+flexPrintFun <- function(x){
+    res <- flextable(x) %>%                        # Forward-pipe operator
+    width(j=1, width = 1.0) %>%                    # Set columns width, total 4 columns
+    width(j=2, width = 3.0) %>%           
+    width(j=3, width = 1.0) %>%
+    width(j=4, width = 1.0) %>%
+    hrule(rule="auto", part="all") %>%             # hrule(height rule) Set flextable rule for rows heights
+    fontsize(part="header", size=11) %>%
+    fontsize(part="body", size=10)
+
+}
+
+
+
+
+cat("**Summary report**");cat("\n"); cat("\n")
+summ <- data.frame(matrix(rep ('', times = 16,), ncol = 4, byrow = F))               #Create a new empty data frame 4-by-4
+colnames (summ) <- c('Section', 'Issue', 'Suggestion', 'Response' )                  #
+theme_box(flexPrintFun (summ))
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+####################################################################################################
+################      Read data and get variable information       #################################
+####################################################################################################
+
+# data <- haven::read_sav("Z:\\assda\\publish\\ANU\\Archivists\\RyanPerry\\Scanlon 2018-2021\\100072 - Scanlon 2018\\Processing_2022-03-03\\2133 Social Cohesion 2018 Final weighted - confidentialised.sav")
+
+
+# data <- haven::read_sav(path_sav)
+
+
+# params$data_sav <- haven::read_sav('../Data/SRC2793 ADA Final 04-11-2022.sav')
+
+
+conf_var  <- c(' ')
+
+# conf_var  <- c('dem2a_3','dem2a_2', 'dem2a_1', 'dem9a', 'srcid','pcode','dem5','dem6','A2A','A2B','D4') # Add sus name, customisable global variable, 
+                                                                                                        
+var_info  <- look_for(params$data_sav) %>%                        # extract variable information from spss data
+             lookfor_to_long_format() %>%                           # Expand the table by value label, Cartesian product with value label
+             convert_list_columns_to_character()                    # Convert list to character for each element in the table
+
+varLabel <- var_label(params$data_sav)                                         #extract variable label to varLabel
+varName  <- attributes(params$data_sav)$name                              #extract variable name
+
+colnames (var_info) <- c("pos", "variable", "label", "col_type", "levels", "value_labels")
+
+
+```
+
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'}  
+
+####################################################################################################
+################   Tables with basic information  (Not derived from data) ##########################
+####################################################################################################
+
+####################################################################################################
+################## Unable to check a part of the variables       ###################################
+####################################################################################################
+cat("**Detailed report**");cat("\n"); cat("\n")
+
+flexPrintFun <- function(x){                        #Function that print table with 2 columns
+  flextable(x) %>%
+    width(j=1, width = 1.00) %>%
+    width(j=2, width = 2.00) %>%
+    hrule(rule="auto", part="all") %>%
+    fontsize(part="header", size=8) %>%
+    fontsize(part="body", size=8) 
+}
+
+missLabel <-  which(varLabel== 'NULL')            # Find the Missing value on variable label.
+posi <- as.numeric(missLabel)                     # 
+name <- names (missLabel)                         # And extract corresponding variable name 
+n <- length (posi)                                # how many label was missing
+
+#if there is a missing variable label, print 
+a <- ifelse (n > 0,  'At least one of the variables in the data do not have a variable label. The list of variables with missing variable labels are presented in *Table 1*. Please provide the respective variable labels and check if the variables have any direct or quasi personal identifiable information.', 'All variables in the data have variable label. The check for possible direct or quasi PII is conducted for all variables.');
+
+missLabel_table <- data.frame(matrix (cbind(posi,name), ncol = 2))            # Combine the position and variable name into a missLable_table
+colnames (missLabel_table) <- c('Serial',  'Variable name')                   # Assign header(colnames) to missLable_table
+
+
+cat("\n"); cat("\n")
+cat("*Before being released, the datasets should be curated in a way that the individuals could not be identified through the information belong to the data. The information possessing the risk of identifying individuals are called Personally Identifiable Information (PII). This document produces a preliminary report on the existence of any PII in the data.*");cat("\n"); cat("\n")
+
+cat("\n"); cat("\n")
+cat("*1.0 Missing variable label*");cat("\n"); cat("\n")
+cat("\n"); cat("\n")
+cat("The presence of PII in the dataset is checked through an automated process. As a part of the proces, the presence of *key words* is searched in the variable label. If the variable does not have any variable label or have short non-informative labels, automated confidentiality checks cannot be done.");   cat("\n"); cat("\n") 
+cat("*1.1 Check for missing variable label*");cat("\n"); cat("\n")
+cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+cat("*Table 1: The list of variables with missing variable labels*")
+cat("\n"); cat("\n")
+#theme_box(flexPrintFun (missLabel_table))
+
+# theme_box(flexPrintFun(data.frame (sapply( missLabel_table, as.character))))
+# theme_box(flexPrintFun(convert_list_columns_to_character(missLabel_table) ))
+if (nrow(missLabel_table)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(missLabel_table) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( missLabel_table, as.character))))
+  
+}
+
+
+cat("\n"); cat("\n")
+
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'}  
+####################################################################################################
+##################### Direct Personally Identifiable Information ###################################
+####################################################################################################
+flexPrintFun <- function(x){                  #Function that print table with 6 columns
+  flextable(x) %>%
+    width(j=1, width = 1.00) %>%
+    width(j=2, width = 2.00) %>%
+    width(j=3, width = 0.75) %>%
+    width(j=4, width = 0.75) %>%
+    width(j=5, width = 0.75) %>%
+    width(j=6, width = 0.50) %>%
+    hrule(rule="auto", part="all") %>%
+    fontsize(part="header", size=8) %>%
+    fontsize(part="body", size=8) 
+}
+cat("\n"); cat("\n")
+
+# DPII_keywords <- regex("(iden)|(ID)|(name)|(phone)|(mobile)|(fax)|(URL)|(longi)|(lati)" ,ignore_case=TRUE)                   #Position that varLabel contains ID or name or ....
+                          
+# var_posi  <- str_which  ( varLabel, DPII_keywords)
+
+# var_match <- str_extract(varLabel[var_posi], DPII_keywords )
+
+var_posi  <- str_which  (varLabel, "(identi)|(ID)|(Name)|(name)|(Phone)|(phone)|(Mobile)|(mobile)", negate = FALSE)
+var_match <- str_extract(varLabel[var_posi], "(identi)|(ID)|(Name)|(name)|(Phone)|(phone)|(Mobile)|(mobile)")
+
+
+
+                                                                                                      # Potential improvement: Variable name(Rcode): 
+                                                                                                      # sl<-> dict_confidential_variable; nv <-> empty_column; 
+                                                                                                      # su <-> suggestion_column
+dict_var <- paste(var_posi, varName[var_posi], sep = ' :');                                           # Join var_position that contains   
+                                                                                                      # Longi or Latitude or url or Url, 
+nv_col <- rep('',length(dict_var)); su_col <- rep('KO/ Delete',length(dict_var));                     # Create a empty colom for Response and suggestions
+
+personal_identifiable <- data.frame(matrix (cbind(
+              dict_var,varLabel[var_posi],  var_match, su_col, nv_col, nv_col), ncol = 6,))           # Combine all column together. 
+colnames (personal_identifiable) <- c('Serial: Name',  'Variable label', 'Match', 'Suggestion', 'Response', 'Status')   # Assign Header of the table
+
+a <- ifelse (length (dict_var) > 0, 'Direct Personally Identifiable Information (DPII) were checked through, the terms, *iden, name, phone, mobile, fax, url, longi* or *lati* in the variable label. The list of variables with Direct Personally Identifiable Information as detected through preliminary search is presented in *Table 2*.', 'Direct Personally Identifiable Information were checked through, the terms, *iden, name, phone, mobile, fax, url, longi* or *lati* in the variable label. No possible Direct Personally Identifiable Information was detected in the preliminary search.');    # Concern: Text should be consistent with var_match if there is any changes or improvements
+
+cat("\n"); cat("\n")
+cat("*2.0 Direct Personally Identifiable Information (DPII)*");cat("\n"); cat("\n")
+cat("\n"); cat("\n")
+cat("The information capable of identifying a person without information from other variable or with cross-linking through other information that is in the public domain. Examples of such identifiers includes, name, telephone number, fax number or email address.")
+cat("\n"); cat("\n")
+cat("*2.1 Checking DPII in the data*");cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+cat("*Table 2: List of variables with possible Direct Personally Identifiable Information.*")
+cat("\n"); cat("\n")
+#theme_box(flexPrintFun (personal_identifiable))
+
+# theme_box(flexPrintFun(data.frame (sapply( personal_identifiable, as.character))))                   #print the table
+
+if (nrow(personal_identifiable)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(personal_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( personal_identifiable, as.character))))
+  
+}
+
+
+cat("\n"); cat("\n")
+cat("*DPII are linked to the highest level of identification risk. DPII in publicly released datasets may be considered as a breach of the law. Please confirm that, this information will only be available in the archival version of the datasets. This information will not be published as a part of any publicly released or restricted release dataset.*");cat("\n"); cat("\n")
+
+```
+
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'}  
+####################################################################################################
+##################### Indirect Personally Identifiable Information ###################################
+####################################################################################################
+
+cat("\n"); cat("\n")
+
+cat("*3.0 Indirect Personally Identifiable Information (IPII)*");cat("\n"); cat("\n")
+
+cat("*The IPII (Quasi or indirect identifiers), by themselves, do not identify a specific individual. However, aggregating with other linked information, they possess the risk of identifying individuals. Examples of such identifiers include, Zip code/Post code, Village/Town, Age, Gender and Education.*"); cat("\n"); cat("\n")
+
+cat("*3.1 Geospatial Indirect Personally Identifiable Information *")
+cat("\n"); cat("\n")
+cat("Geospatial data with units where a small number of population resides may be a potential quasi-identifier. The cut-off point is usually considered as 30 000 individuals. Information on any geographic unit with less than 30 000 individuals may be considered as a potential identifiable risk.");cat("\n"); cat("\n")
+
+IPII_keywords<- regex("(vill)|(town)|(post)|(code)",ignore_case = TRUE)
+var_posi<- str_which  (varLabel,IPII_keywords , negate = FALSE)           # possible key word: zip,
+var_match <- str_extract (varLabel[var_posi], IPII_keywords) 
+
+dict_var <- paste(var_posi, varName[var_posi], sep = ' :');                                          # Join var_position and varName with ":  "(colon)
+nv_col <- rep('',length(dict_var)); su_col <- rep('KO/ Con',length(dict_var));                       # Create a empty colom for Response and suggestions
+geographic_identifiable <- data.frame(matrix (cbind(dict_var, varLabel[var_posi], var_match, su_col, nv_col, nv_col), ncol = 6))        # Combine all column together. 
+colnames (geographic_identifiable) <- c('Serial: Name', 'Variable label', 'Matches', 'Suggestion', 'Response', 'Status')
+
+a <- ifelse (length (dict_var) > 0,  'Geospatial Indirect Personally Identifiable Information is checked using the terms, *vill, town, post* or *code* in the variable label. A list of possible Geospatial Indirect Personally Identifiable Information as detected through preliminary search is presented in Table 3.', 'Geospatial Indirect Personally Identifiable Information is checked using the terms, *vill, lati, post* or *code* in the variable label. No possible Geospatial Indirect Personally Identifiable Information was detected through preliminary search.');
+
+cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+cat("*Table 3: List of variables with possible Geospatial Indirect Personally Identifiable Information*")
+cat("\n"); cat("\n")
+if (nrow(geographic_identifiable)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(geographic_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( geographic_identifiable, as.character))))
+  
+}
+
+cat("\n"); cat("\n")
+cat("*Geospatial IPII are regarded as a higher level of identification risk in the presence of other quasi identifiers (e.g. age, education, occupation). Geospatial IPII in the publicly released datasets may not be considered as a breach of the law.  This information may not be published as a part of publicly released dataset.*");
+cat("\n"); cat("\n")
+```
+
+
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'}  
+####################################################################################################
+##################### sensitive Information ###################################
+####################################################################################################
+
+cat("\n"); cat("\n")
+cat("*4.0 Sensitive infomation*");cat("\n"); cat("\n")
+
+cat("*Personal information includes a broad range of information, or an opinion, that could identify an individual. What is personal information will vary, depending on whether a person can be identified or is reasonably identifiable in the circumstances. The list of topics is taken from “What is sensitive information” from the website of the Office of the Australian Information Commissionaire (https://www.oaic.gov.au/privacy/your-privacy-rights/your-personal-information/what-is-personal-information).*"); cat("\n"); cat("\n")
+
+cat("*4.1 Racial or ethnic origin*")
+cat("\n"); cat("\n")
+cat("The term race refers to the concept of dividing people into populations or groups on the basis of various sets of physical characteristics (which usually result from genetic ancestry). Ethnicity is based on shared identity based on culture, language, common ancestry, and religion. This infomation is identifiable in the circumstances, like low frequency.");cat("\n"); cat("\n")
+
+IPII_keywords<- regex("(birth)|(born)|(country)|(place)|(origin)|(ethnic)|(speak)|(language)|(mother)|(father)|(ancestry)|(Identify)|(indigenous)|(torres strait)|(islander)|(aboriginal) ",ignore_case = TRUE)
+var_posi<- str_which  (varLabel,IPII_keywords , negate = FALSE)           # possible key word: zip,
+var_match <- str_extract (varLabel[var_posi], IPII_keywords) 
+
+dict_var <- paste(var_posi, varName[var_posi], sep = ' :');                                          # Join var_position and varName with ":  "(colon)
+nv_col <- rep('',length(dict_var)); su_col <- rep('KO/ Con',length(dict_var));                       # Create a empty colom for Response and suggestions
+geographic_identifiable <- data.frame(matrix (cbind(dict_var, varLabel[var_posi], var_match, su_col, nv_col, nv_col), ncol = 6))        # Combine all column together. 
+colnames (geographic_identifiable) <- c('Serial: Name', 'Variable label', 'Matches', 'Suggestion', 'Response', 'Status')
+
+a <- ifelse (length (dict_var) > 0,  'Racial or Ethnic Origin Identifiable Information is checked using the terms, *birth, born, country, place, origin,ethnic,Language, speak ,Mother, father, ancestry,  Identify, indigenous, Torres strait, islander, aboriginal * in the variable label. A list of possible Racial or Ethnic Origin Identifiable Information as detected through preliminary search is presented in Table 4.', 'Racial or Ethnic Origin Identifiable Information is checked using the terms, *birth, born, country, place, origin,ethnic,Language, speak ,Mother, father, ancestry,  Identify, indigenous, Torres strait, islander, aboriginal *  in the variable label. No possible Racial or Ethnic Origin Identifiable Information was detected through preliminary search.');
+
+cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+cat("*Table 4: List of variables with possible preliminary Identifiable Information*")
+cat("\n"); cat("\n")
+if (nrow(geographic_identifiable)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(geographic_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( geographic_identifiable, as.character))))
+  
+}
+
+cat("\n"); cat("\n")
+cat("*Racial or Ethnic Origin in the publicly released datasets may not be considered as a breach of the law.  This information may not be published as a part of publicly released dataset.*");
+cat("\n"); cat("\n")
+```
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'}  
+####################################################################################################
+##################### sensitive Information ###################################
+####################################################################################################
+
+cat("\n"); cat("\n")
+
+cat("*4.2 Political Opinions or Associations*")
+cat("\n"); cat("\n")
+cat("Political opinions or associations refer to an individual's beliefs, views, affiliations, or involvement with political parties, organizations, or ideologies. These opinions and associations can be personal and may reflect an individual's political preferences, affiliations, or activities. Political opinions and associations are considered sensitive data because they are closely tied to an individual's fundamental rights, freedoms, and privacy. The sensitivity arises from the potential for misuse, discrimination, or targeting based on someone's political beliefs or affiliations.");cat("\n"); cat("\n")
+
+IPII_keywords<- regex("(member)|(align)|(political)|(party)|(left)|(right)|(election)|(vote)",ignore_case = TRUE)
+var_posi<- str_which  (varLabel,IPII_keywords , negate = FALSE)           # possible key word: zip,
+var_match <- str_extract (varLabel[var_posi], IPII_keywords) 
+
+dict_var <- paste(var_posi, varName[var_posi], sep = ' :');                                          # Join var_position and varName with ":  "(colon)
+nv_col <- rep('',length(dict_var)); su_col <- rep('KO/ Con',length(dict_var));                       # Create a empty colom for Response and suggestions
+geographic_identifiable <- data.frame(matrix (cbind(dict_var, varLabel[var_posi], var_match, su_col, nv_col, nv_col), ncol = 6))        # Combine all column together. 
+colnames (geographic_identifiable) <- c('Serial: Name', 'Variable label', 'Matches', 'Suggestion', 'Response', 'Status')
+
+a <- ifelse (length (dict_var) > 0,  'Political Opinions or Associations Information is checked using the terms, *member, align, political, party, left, right, election, vote  * in the variable label. A list of possible Political Opinions or Associations Information as detected through preliminary search is presented in Table 5.', 'Political Opinions or Associations Information is checked using the terms, *member, align, political, party, left, right, election, vote  * in the variable label.  No possible Political Opinions or Associations Information was detected through preliminary search.');
+
+cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+cat("*Table 5: List of variables with possible preliminary sensitive Information*")
+cat("\n"); cat("\n")
+if (nrow(geographic_identifiable)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(geographic_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( geographic_identifiable, as.character))))
+  
+}
+
+# cat("\n"); cat("\n")
+# cat("*Racial or Ethnic Origin in the publicly released datasets may not be considered as a breach of the law.  This information may not be published as a part of publicly released dataset.*");
+# cat("\n"); cat("\n")
+```
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'}  
+####################################################################################################
+##################### sensitive Information ###################################
+####################################################################################################
+
+cat("\n"); cat("\n")
+
+cat("*4.3 Religious or philosophical beliefs *")
+cat("\n"); cat("\n")
+cat("Religious or philosophical beliefs refer to an individual's personal beliefs, values, or convictions related to religion or philosophical ideologies. These beliefs encompass an individual's faith, religious practices, spiritual views, moral convictions, or philosophical perspectives. Religious or philosophical beliefs are considered sensitive data due to their intimate and personal nature. They are deeply rooted in an individual's identity, shaping their worldview, moral compass, and decision-making. The sensitivity arises from the potential for discrimination, stigmatization, or violation of an individual's rights and freedoms based on their religious or philosophical beliefs.");cat("\n"); cat("\n")
+
+IPII_keywords<- regex("(church)|(mosque)|(temple)|(synagogue)|(service)|(observe)|(practice)|(religion)",ignore_case = TRUE)
+var_posi<- str_which  (varLabel,IPII_keywords , negate = FALSE)           # possible key word: zip,
+var_match <- str_extract (varLabel[var_posi], IPII_keywords) 
+
+dict_var <- paste(var_posi, varName[var_posi], sep = ' :');                                          # Join var_position and varName with ":  "(colon)
+nv_col <- rep('',length(dict_var)); su_col <- rep('KO/ Con',length(dict_var));                       # Create a empty colom for Response and suggestions
+geographic_identifiable <- data.frame(matrix (cbind(dict_var, varLabel[var_posi], var_match, su_col, nv_col, nv_col), ncol = 6))        # Combine all column together. 
+colnames (geographic_identifiable) <- c('Serial: Name', 'Variable label', 'Matches', 'Suggestion', 'Response', 'Status')
+
+a <- ifelse (length (dict_var) > 0,  'Religious or philosophical beliefs Information is checked using the terms, *church, mosque, temple, synagogue, service, observe, practice, religion* in the variable label. A list of possible Religious or philosophical beliefs Information as detected through preliminary search is presented in Table 6.', 'Religious or philosophical beliefs Information is checked using the terms, *church, mosque, temple, synagogue, service, observe, practice, religion* in the variable label. No possible Religious or philosophical beliefs Information was detected through preliminary search.');
+
+cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+cat("*Table 6: List of variables with possible preliminary sensitive Information*")
+cat("\n"); cat("\n")
+if (nrow(geographic_identifiable)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(geographic_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( geographic_identifiable, as.character))))
+  
+}
+
+# cat("\n"); cat("\n")
+# cat("*Racial or Ethnic Origin in the publicly released datasets may not be considered as a breach of the law.  This information may not be published as a part of publicly released dataset.*");
+# cat("\n"); cat("\n")
+```
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'}  
+####################################################################################################
+##################### sensitive Information ###################################
+####################################################################################################
+
+cat("\n"); cat("\n")
+
+cat("*4.4 Trade union membership or associations*")
+cat("\n"); cat("\n")
+cat("Trade union membership or associations refer to an individual's involvement, affiliation, or membership in a labor union or trade union organization that represents workers' interests and rights in the workplace. Trade unions advocate for improved working conditions, fair wages, and collective bargaining rights on behalf of their members. Trade union membership or associations can be considered sensitive data due to the potential for discrimination, retaliation, or negative consequences that individuals may face in their employment or social contexts based on their union affiliations. Disclosure of trade union membership or associations could result in adverse actions such as unfair treatment, harassment, or targeting by employers or others who may hold opposing views.");cat("\n"); cat("\n")
+
+IPII_keywords<- regex("(member)|(union)|(association)|(trade)",ignore_case = TRUE)
+var_posi<- str_which  (varLabel,IPII_keywords , negate = FALSE)           # possible key word: zip,
+var_match <- str_extract (varLabel[var_posi], IPII_keywords) 
+
+dict_var <- paste(var_posi, varName[var_posi], sep = ' :');                                          # Join var_position and varName with ":  "(colon)
+nv_col <- rep('',length(dict_var)); su_col <- rep('KO/ Con',length(dict_var));                       # Create a empty colom for Response and suggestions
+geographic_identifiable <- data.frame(matrix (cbind(dict_var, varLabel[var_posi], var_match, su_col, nv_col, nv_col), ncol = 6))        # Combine all column together. 
+colnames (geographic_identifiable) <- c('Serial: Name', 'Variable label', 'Matches', 'Suggestion', 'Response', 'Status')
+
+a <- ifelse (length (dict_var) > 0,  'Trade union membership or associations Information is checked using the terms, *member, union, association, traden* in the variable label. A list of possible Trade union membership or associations Information as detected through preliminary search is presented in Table 6.', 'Trade union membership or associations Information is checked using the terms, *member, union, association, traden* in the variable label. No possible Trade union membership or associations Information was detected through preliminary search.');
+
+cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+cat("*Table 6: List of variables with possible preliminary sensitive Information*")
+cat("\n"); cat("\n")
+if (nrow(geographic_identifiable)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(geographic_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( geographic_identifiable, as.character))))
+  
+}
+
+# cat("\n"); cat("\n")
+# cat("*Racial or Ethnic Origin in the publicly released datasets may not be considered as a breach of the law.  This information may not be published as a part of publicly released dataset.*");
+# cat("\n"); cat("\n")
+```
+
+
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'}  
+####################################################################################################
+##################### sensitive Information ###################################
+####################################################################################################
+
+cat("\n"); cat("\n")
+
+cat("*4.5 Sexual orientation or practices*")
+cat("\n"); cat("\n")
+cat("Sexual orientation or practices data refers to information related to an individual's sexual orientation, which refers to a person's enduring pattern of emotional, romantic, and/or sexual attractions towards individuals of the same gender, opposite gender, or both genders. It can also encompass information about an individual's sexual practices or behaviors. It is considered sensitive data due to several reasons: Privacy and Discrimination: Disclosure of sexual orientation can lead to privacy breaches and potential discrimination based on societal biases or prejudices. Personal and Intimate Nature: Sexual orientation is a deeply personal aspect of an individual's identity and private life.");cat("\n"); cat("\n")
+
+IPII_keywords<- regex("(identif)|(gay)|(lesbian)|(binary)|(queer)|(LGBT)|(orientation)|(practice)|(bisexual)|(transgender)|(intersex)|(asexual)|(pansexual)",ignore_case = TRUE)
+var_posi<- str_which  (varLabel,IPII_keywords , negate = FALSE)           # possible key word: zip,
+var_match <- str_extract (varLabel[var_posi], IPII_keywords) 
+
+dict_var <- paste(var_posi, varName[var_posi], sep = ' :');                                          # Join var_position and varName with ":  "(colon)
+nv_col <- rep('',length(dict_var)); su_col <- rep('KO/ Con',length(dict_var));                       # Create a empty colom for Response and suggestions
+geographic_identifiable <- data.frame(matrix (cbind(dict_var, varLabel[var_posi], var_match, su_col, nv_col, nv_col), ncol = 6))        # Combine all column together. 
+colnames (geographic_identifiable) <- c('Serial: Name', 'Variable label', 'Matches', 'Suggestion', 'Response', 'Status')
+
+a <- ifelse (length (dict_var) > 0,  'Sexual orientation or practices Information is checked using the terms, *identif, gay, lesbian, queer, binary, LGBT, orientation, practice, bisexual, transgender, intersex, asexual, pansexual* in the variable label. A list of possible Sexual orientation or practices Information as detected through preliminary search is presented in Table 6.', 'Sexual orientation or practices Information is checked using the terms, *identif, gay, lesbian, queer, binary, LGBT, orientation, practice, bisexual, transgender, intersex, asexual, pansexual* in the variable label. No possible Sexual orientation or practices Information was detected through preliminary search.');
+
+cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+cat("*Table 7: List of variables with possible preliminary sensitive Information*")
+cat("\n"); cat("\n")
+if (nrow(geographic_identifiable)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(geographic_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( geographic_identifiable, as.character))))
+  
+}
+
+# cat("\n"); cat("\n")
+# cat("*Racial or Ethnic Origin in the publicly released datasets may not be considered as a breach of the law.  This information may not be published as a part of publicly released dataset.*");
+# cat("\n"); cat("\n")
+```
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'}  
+####################################################################################################
+##################### sensitive Information ###################################
+####################################################################################################
+
+cat("\n"); cat("\n")
+
+cat("*4.6 Criminal record *")
+cat("\n"); cat("\n")
+cat("A criminal record refers to information about an individual's past criminal convictions and any associated legal proceedings or offenses. It includes details such as the nature of the crime, date of conviction, and sentencing information. Criminal records are maintained by law enforcement agencies and can be accessed by authorized individuals or organizations for various purposes, such as background checks or employment screenings. Criminal record data is considered sensitive due to several reasons:Privacy and Reputation, Discrimination and Stigmatization, ");cat("\n"); cat("\n")
+
+IPII_keywords<- regex("(criminal)|(record)|(conviction)|(sentenced)|(drug)|(abuse)",ignore_case = TRUE)
+var_posi<- str_which  (varLabel,IPII_keywords , negate = FALSE)           # possible key word: zip,
+var_match <- str_extract (varLabel[var_posi], IPII_keywords) 
+
+dict_var <- paste(var_posi, varName[var_posi], sep = ' :');                                          # Join var_position and varName with ":  "(colon)
+nv_col <- rep('',length(dict_var)); su_col <- rep('KO/ Con',length(dict_var));                       # Create a empty colom for Response and suggestions
+geographic_identifiable <- data.frame(matrix (cbind(dict_var, varLabel[var_posi], var_match, su_col, nv_col, nv_col), ncol = 6))        # Combine all column together. 
+colnames (geographic_identifiable) <- c('Serial: Name', 'Variable label', 'Matches', 'Suggestion', 'Response', 'Status')
+
+a <- ifelse (length (dict_var) > 0,  'Criminal record Information is checked using the terms, *criminal, record, conviction, sentenced, drug, abuse * in the variable label. A list of possible Criminal record Information as detected through preliminary search is presented in Table 7.', 'Criminal record Information is checked using the terms, *criminal, record, conviction, sentenced, drug, abuse * in the variable label. No possible Criminal record Information was detected through preliminary search.');
+
+cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+cat("*Table 8: List of variables with possible preliminary sensitive Information*")
+cat("\n"); cat("\n")
+if (nrow(geographic_identifiable)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(geographic_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( geographic_identifiable, as.character))))
+  
+}
+
+# cat("\n"); cat("\n")
+# cat("*Racial or Ethnic Origin in the publicly released datasets may not be considered as a breach of the law.  This information may not be published as a part of publicly released dataset.*");
+# cat("\n"); cat("\n")
+```
+
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'}  
+####################################################################################################
+##################### sensitive Information ###################################
+####################################################################################################
+
+cat("\n"); cat("\n")
+
+cat("*4.7 Health or genetic information *")
+cat("\n"); cat("\n")
+cat("A criminal record refers to information about an individual's past criminal convictions and any associated legal proceedings or offenses. It includes details such as the nature of the crime, date of conviction, and sentencing information. Criminal records are maintained by law enforcement agencies and can be accessed by authorized individuals or organizations for various purposes, such as background checks or employment screenings. Criminal record data is considered sensitive due to several reasons:Privacy and Reputation, Discrimination and Stigmatization, ");cat("\n"); cat("\n")
+
+IPII_keywords<- regex("(Health)|(Genetic)|(Ancestry)|(Disease)|(Chronic)|(Pain)|(Disability)|(disabled)|(Heart)|(kidney)|(lung)|(respiratory)|(COVID)",ignore_case = TRUE)
+var_posi<- str_which  (varLabel,IPII_keywords , negate = FALSE)           # possible key word: zip,
+var_match <- str_extract (varLabel[var_posi], IPII_keywords) 
+
+dict_var <- paste(var_posi, varName[var_posi], sep = ' :');                                          # Join var_position and varName with ":  "(colon)
+nv_col <- rep('',length(dict_var)); su_col <- rep('KO/ Con',length(dict_var));                       # Create a empty colom for Response and suggestions
+geographic_identifiable <- data.frame(matrix (cbind(dict_var, varLabel[var_posi], var_match, su_col, nv_col, nv_col), ncol = 6))        # Combine all column together. 
+colnames (geographic_identifiable) <- c('Serial: Name', 'Variable label', 'Matches', 'Suggestion', 'Response', 'Status')
+
+a <- ifelse (length (dict_var) > 0,  'Health or genetic information is checked using the terms, *Health, Genetic, Ancestry, Disease, Chronic, Pain, Disability, disabled, Condition, Heart, kidney, lung, respiratory, COVID * in the variable label. A list of possible Health or genetic information as detected through preliminary search is presented in Table 9.', 'Health or genetic information is checked using the terms, *Health, Genetic, Ancestry, Disease, Chronic, Pain, Disability, disabled, Condition, Heart, kidney, lung, respiratory, COVID * in the variable label. No possible Health or genetic information was detected through preliminary search.');
+
+cat("\n"); cat("\n")
+cat (a)
+cat("\n"); cat("\n")
+cat("*Table 8: List of variables with possible preliminary sensitive Information*")
+cat("\n"); cat("\n")
+if (nrow(geographic_identifiable)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(geographic_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( geographic_identifiable, as.character))))
+  
+}
+
+# cat("\n"); cat("\n")
+# cat("*Racial or Ethnic Origin in the publicly released datasets may not be considered as a breach of the law.  This information may not be published as a part of publicly released dataset.*");
+# cat("\n"); cat("\n")
+```
+
+
+

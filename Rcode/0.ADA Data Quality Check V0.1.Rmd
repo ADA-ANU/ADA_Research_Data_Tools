@@ -1,8 +1,15 @@
 ---
-title: "Data Quality Checks: "
-author: ""
-date: " "
+title: "ADA Data Quality Check Report: `r params$doc_title`"
+author: "`r params$author`"
+date: "`r format (Sys.time(), format='%d-%b-%Y')`" 
 output: word_document
+params:
+  data_sav: NA
+  doc_title: NA
+  author: NA
+
+
+  
 ---
 
 
@@ -45,20 +52,22 @@ theme_box(flexPrintFun (data.frame(summ)))
 ################      Read data and get variable information       #################################
 ####################################################################################################
 
+# data <- haven::read_sav("Z:\\assda\\publish\\ANU\\Archivists\\RyanPerry\\Scanlon 2018-2021\\100072 - Scanlon 2018\\Processing_2022-03-03\\2133 Social Cohesion 2018 Final weighted - confidentialised.sav")
+# data_sav <- haven::read_sav("Z:/assda/publish/ANU/Archivists/Tina/Lowy Poll/100047 - Lowy Poll 2021/Processing/2643 Life in Australia Wave 47 - final Lowy data file (23042021).sav")
+# params$data_sav <- haven::read_sav('../Data/Cohort 2_ADA_wave 11.sav')
 
-data <- haven::read_sav("./Data/.sav")
+conf_var  <- c(' ')
 
-conf_var  <- c()
-
-var_info  <- look_for(data, details = TRUE) %>%                  #add details about each variable
+var_info  <- look_for(params$data_sav) %>%                  #add details about each variable
              lookfor_to_long_format() %>%
              convert_list_columns_to_character()
 
-varLabel <- var_label(data)
-varName  <- unique(var_info$variable)
+varLabel <- var_label(params$data_sav)
+varName  <- attributes(params$data_sav)$name
+unique_var_label<- (unname(lapply(params$data_sav, var_label)))
+unique_var_label[which(lapply(unique_var_label, is.null)==T)] <- ''
 
-colnames (var_info) <- c("pos", "variable", "label", "col_type", "levels", "value_labels", "class", "type",
-                         "na_values",  "na_range", "unique_values", "count_missing", "range")
+colnames (var_info) <- c("pos", "variable", "label", "col_type", "levels", "value_labels")
 
 cat("**Detailed report**");cat("\n"); cat("\n")
 
@@ -159,7 +168,14 @@ cat("*2.1 Check for duplicated variable labels:*")
 cat("\n"); cat("\n")
 cat (a)
 cat("\n"); cat("\n")
-theme_box(flexPrintFun (dup_varia))
+# theme_box(flexPrintFun (dup_varia))
+if (nrow(dup_varia)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(dup_varia) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( dup_varia, as.character))))
+  
+}
 ```
 
 
@@ -205,7 +221,14 @@ cat("\n"); cat("\n")
 cat (a)
 
 cat("\n"); cat("\n")
-theme_box(flexPrintFun(tab1))
+# theme_box(flexPrintFun(tab1))
+if (nrow(tab1)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(tab1) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( tab1, as.character))))
+  
+}
 cat("\n"); cat("\n")
 ```
 
@@ -231,13 +254,27 @@ cat("\n"); cat("\n")
 cat("*4.0 Variable label check*");cat("\n"); cat("\n")
 cat("4.1 Variable label length check");cat("\n"); cat("\n")
 
-v_number  <- which (as.numeric(nchar (unique(var_info$label)))%in% c(1:29))   #position of the variable lable that range from 1 to 29
+
+
+v_number  <- which (as.numeric(nchar (unique_var_label))%in% c(0:29))   #position of the variable lable that range from 1 to 29
 seri_col <- paste(v_number, varName[v_number], sep = ' :');                         #
 
 nv_col <- rep('',length(seri_col)); su_col <- rep('KO/SN',length(seri_col))
 
-tab1      <- data.frame(matrix(cbind(seri_col, unique(var_info$label)[v_number], 
-                        as.numeric(nchar(unique(var_info$label)[v_number])), su_col, nv_col, nv_col ), ncol = 6))
+tab1      <- data.frame(matrix(cbind(seri_col, unique_var_label[v_number],
+as.numeric(nchar(unique_var_label[v_number])), su_col, nv_col, nv_col ), ncol = 6))
+
+# tab1      <- data.frame(matrix(
+#   cbind(
+#     seri_col, 
+#     var_info$label[v_number], 
+#     as.numeric(nchar(unique(var_info$label)[v_number])), 
+#     su_col, nv_col, nv_col ), 
+#   
+#   ncol = 6))
+
+
+
 colnames (tab1) <- c('Serial: Name', 'Variable label', 'Length', 'Suggestion', 'Response', 'Status' )
 
 a <- ifelse (length (seri_col) > 0, 'Short variable labels without sufficient information  as they may not carry sufficient information. A list of varables with short names (less than 30 characters) are presented below. Please check the variable labels and suggest if any change is required', 'Short variable labels without sufficient information  as they may not carry sufficient information. Length of variable labels were checked and none of the variables has label with length less than 30 characters.');
@@ -248,7 +285,16 @@ cat("\n"); cat("\n")
 cat (a)
 
 cat("\n"); cat("\n")
-theme_box(flexPrintFun(tab1))
+# theme_box(flexPrintFun(tab1))
+# theme_box(flexPrintFun( data.frame(sapply(tab1, as.character)) ))  
+
+if (nrow(tab1)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(tab1) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( tab1, as.character))))
+  
+}
 cat("\n"); cat("\n")
 ```
 
@@ -272,13 +318,13 @@ vlabelLength
 
 ```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
 
-v_number  <- which (as.numeric(nchar (unique(var_info$label))) %in% c(81:100))      #lenth between 81 and 100
+v_number  <- which (as.numeric(nchar (unique_var_label)) %in% c(81:100))      #lenth between 81 and 100
 seri_col <- paste(v_number, varName[v_number], sep = ' :');
 
 nv_col <- rep('',length(seri_col)); su_col <- rep('KO/SN',length(seri_col))
 
-tab1      <- data.frame(matrix(cbind(seri_col, unique(var_info$label)[v_number], 
-                        as.numeric(nchar(unique(var_info$label)[v_number])), su_col, nv_col, nv_col ), ncol = 6))
+tab1      <- data.frame(matrix(cbind(seri_col, unique_var_label[v_number], 
+                        as.numeric(nchar(unique_var_label[v_number])), su_col, nv_col, nv_col ), ncol = 6))
 colnames (tab1) <- c('Serial: Name', 'Variable label', 'Length', 'Suggestion', 'Response', 'Status' )
 
 a <- ifelse (length (seri_col) > 0,  'A list of variables with label of length between 80 and 99 characters is presented in the table below. The labels will be truncated while saving the data in STATA (.dta). format', 'None of the variables has label with length between 80 and 99 characters.');
@@ -289,18 +335,24 @@ cat("\n"); cat("\n")
 cat (a)
 
 cat("\n"); cat("\n")
-theme_box(flexPrintFun(tab1))
+if (nrow(tab1)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(tab1) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( tab1, as.character))))
+  
+}
 cat("\n"); cat("\n")
 ```
 
 
 ```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
-v_number  <- which (as.numeric(nchar (unique(var_info$label))) %in% c(101:150))
+v_number  <- which (as.numeric(nchar (unique_var_label)) %in% c(101:150))
 seri_col <- paste(v_number, varName[v_number], sep = ' :');
 nv_col <- rep('',length(seri_col)); su_col <- rep('KO/SN',length(seri_col))
 
-tab1      <- data.frame(matrix(cbind(seri_col, unique(var_info$label)[v_number], 
-                        as.numeric(nchar(unique(var_info$label)[v_number])), su_col, nv_col, nv_col ), ncol = 6))
+tab1      <- data.frame(matrix(cbind(seri_col, unique_var_label[v_number], 
+                        as.numeric(nchar(unique_var_label[v_number])), su_col, nv_col, nv_col ), ncol = 6))
 colnames (tab1) <- c('Serial: Name', 'Variable label', 'Length', 'Suggestion', 'Response', 'Status' )
 
 
@@ -312,18 +364,24 @@ cat("\n"); cat("\n")
 cat (a)
 
 cat("\n"); cat("\n")
-theme_box(flexPrintFun(tab1))
+if (nrow(tab1)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(tab1) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( tab1, as.character))))
+  
+}
 cat("\n"); cat("\n")
 ```
 
 
 ```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
-v_number  <- which (as.numeric(nchar (unique(var_info$label)))> 150)      #varible label length larger than 150
+v_number  <- which (as.numeric(nchar (unique_var_label))> 150)      #varible label length larger than 150
 seri_col <- paste(v_number, varName[v_number], sep = ' :');
 nv_col <- rep('',length(seri_col)); su_col <- rep('KO/SN',length(seri_col))
 
-tab1  <- data.frame(matrix(cbind(seri_col, unique(var_info$label)[v_number], 
-                        as.numeric(nchar(unique(var_info$label)[v_number])), su_col, nv_col, nv_col ), ncol = 6))
+tab1  <- data.frame(matrix(cbind(seri_col, unique_var_label[v_number], 
+                        as.numeric(nchar(unique_var_label[v_number])), su_col, nv_col, nv_col ), ncol = 6))
 colnames (tab1) <- c('Serial: Name', 'Variable label', 'Length', 'Suggestion', 'Response', 'Status' )
 
 a <- ifelse (length (seri_col) > 0,  'A list of variables with label of length 150 characters or more is presented in the table below. These variable labels will be truncated while saving the data in STATA (.dta) format. The variable labels are indeed long and recommended to replace with relatively shorter ones.', 'None of the variables has label of length over 151 characters.');
@@ -334,7 +392,13 @@ cat("\n"); cat("\n")
 cat (a)
 
 cat("\n"); cat("\n")
-theme_box(flexPrintFun(tab1))
+if (nrow(tab1)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(tab1) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( tab1, as.character))))
+  
+}
 cat("\n"); cat("\n")
 ```
 
@@ -383,7 +447,17 @@ cat (a)
 cat("\n"); cat("\n")
 # theme_box(flexPrintFun(tab1))
 
-theme_box(flexPrintFun( data.frame(sapply(tab1, as.character)) ))  
+# theme_box(flexPrintFun( data.frame(sapply(tab1, as.character)) ))  
+# theme_box(flexPrintFun( data.frame(sapply(tab1, as.character)) ))
+# theme_box(flexPrintFun(convert_list_columns_to_character(tab1)))
+if (nrow(tab1)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(tab1) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( tab1, as.character))))
+  
+}
+
 cat("\n"); cat("\n")
 ```
 
@@ -428,7 +502,14 @@ cat (a)
 cat("\n"); cat("\n")
 # theme_box(flexPrintFun (long_value_label))
 
-theme_box(flexPrintFun( data.frame(sapply(long_value_label, as.character)) ))
+if (nrow(long_value_label)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(long_value_label) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( long_value_label, as.character))))
+  
+}
+# theme_box(flexPrintFun( data.frame(sapply(long_value_label, as.character)) ))
 ```
 
 
@@ -472,7 +553,15 @@ cat( "*5.2 Spelling check in value label:*")
 cat("\n"); cat("\n")
 cat (a)
 cat("\n"); cat("\n")
-theme_box(flexPrintFun( data.frame(sapply(tab1, as.character)) ))  
+# theme_box(flexPrintFun( data.frame(sapply(tab1, as.character)) ))  
+if (nrow(tab1)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(tab1) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( tab1, as.character))))
+  
+}
+# theme_box(flexPrintFun(convert_list_columns_to_character(tab1)))
 
 ```
 

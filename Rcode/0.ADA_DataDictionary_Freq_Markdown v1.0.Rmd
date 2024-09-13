@@ -1,0 +1,197 @@
+---
+title: "ADA Data Dictionary : `r params$doc_title`"
+author: "`r params$author`"
+date: "`r format (Sys.time(), format='%d-%b-%Y')`" 
+output: word_document
+params:
+  data_sav: NA
+  doc_title: NA
+  author: NA
+
+  
+---
+
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+library(haven);        # To read .SAV data 
+library(labelled);     # To extarct information from the data
+library(flextable);    # To create tables with merged rows for designated columns
+library(officer);      # To incorporate some of the microsoft 
+library(stringr)
+
+#####################################################################################################################
+#########################           Read data (input by the archivist )              ################################
+#####################################################################################################################
+
+data <- haven::read_sav("Z:\\assda\\publish\\ANU\\Archivists\\Weifan\\ANUpoll data/ANUPoll 52 100109/Original/SRC2843 coded data ADA 08-09-2022.sav")
+data <- haven::read_sav("Z:\\assda\\publish\\ANU\\Archivists\\Weifan/clinic/bnla_f50gr_save_as.sav")
+# data <- haven::read_sav("./Restricted Data - All Formats/01366_spss_r.sav")
+
+
+#####################################################################################################################
+################         Collect information from the data file (No change)           ###############################
+#####################################################################################################################
+
+var_info <-   look_for(data,labels= T,details =T) %>%
+              lookfor_to_long_format() %>%
+              convert_list_columns_to_character()
+
+#####################################################################################################################
+###############    Get necessary information to create dictionary, The information included here ####################
+###                Serial number, name of the variable, variable label and value levels 
+###############    Other information include: 
+###                Type of variable, Number of missing cases, Number of unique values and range
+###############    Archivist can include extra information here if needed                        ####################  
+#####################################################################################################################
+
+
+dictionary            <- var_info [,c(1,2,3,6)]
+colnames (dictionary) <- c( 'Serial' ,'Name', 'Variable_label', 'Value_labels')
+check_box <-  matrix(rep('',nrow (dictionary) ) ,ncol = 1)
+
+dictionary            <- data.frame (dictionary)
+fr                    <- lapply(data, function(x) { return(questionr::freq(x)) })
+Frequency             <- rep (NA, times = nrow (dictionary))
+varName               <- unique(dictionary$Name) ; m <- 0
+
+for (i in 1: length (varName )){
+  d1 <- subset (dictionary, dictionary$Name ==  varName [i] ); n1 <- nrow (d1)
+  f1 <- data.frame(fr[[i]]); f2 <- as.numeric(unlist(f1[1]));
+       for (j in 1: n1){   Frequency  [m+j] <- f2[j]} 
+            m <- m + n1
+}
+
+value <- sub(".*\\[([^][]+)].*", "\\1", dictionary$Value_labels)
+value_l <- str_split_fixed(dictionary$Value_labels, "] ",n=2)[,2]
+
+
+
+dictionary <- cbind (dictionary[1:3],data.frame(value),data.frame(value_l), Frequency)
+colnames (dictionary) <- c('Position', 'Variable','Label', 'Value','Value_labels', 'Frequency')
+
+# dictionary$Frequency  = ifelse(is.na(dictionary$Value_labels), NA, Frequency)
+# dictionary <- cbind (dictionary[1],dictionary[1],dictionary[2:4], Frequency,check_box)
+
+
+
+
+# colnames (dictionary) <- c( 'Variable','Position','Label', 'Value','Value_labels', 'Frequency')
+dictionary$Frequency  <-  ifelse(is.na(dictionary$Value), '', Frequency)
+dictionary$Value_labels  <-  ifelse(is.na(dictionary$Value), '', dictionary$Value_labels)
+
+dictionary$Value  <-  ifelse(is.na(dictionary$Value), '', dictionary$Value)
+```
+
+
+
+
+```{r include=FALSE, message = FALSE,eval=FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+#####################################################################################################################
+###############               1.0 you can choose to Save as csv file,then use excel to process the datadictionary  ####################
+#####################################################################################################################
+
+dictionary_1  <- as.data.frame(dictionary)
+write.csv(dictionary_1,file = "./ADA_DataDictionary_Freq_Markdown.csv",row.names = FALSE)
+```
+
+
+
+
+
+```{r include=FALSE, message = FALSE,eval=FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+#####################################################################################################################
+###############               1.0 you can choose to Save as csv file  ####################
+#####################################################################################################################
+library(dplyr)
+library(tidyr)
+dictionary_2  <- as.data.frame(dictionary)
+
+dictionary_2 <- dictionary_2 %>%
+  spread(Position,Variable,fill = '')
+
+write.csv(dictionary_1,file = "./ADA_DataDictionary_Freq_Markdown.csv",row.names = FALSE)
+```
+
+
+
+
+```{r include=FALSE, message = FALSE,eval=FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+#####################################################################################################################
+###############               1.1you can choose to Save as csv file, with checkbox                             ####################
+#####################################################################################################################
+
+dictionary_2  <- as.data.frame(dictionary)
+# dictionary$Check_box_var <- check_box
+posi <- which(duplicated(dictionary_2$Variable))
+dictionary_2$Variable[posi] <- ''
+dictionary_2$Label[posi] <- ''
+dictionary_2$Position[posi] <- ''
+write.csv(dictionary_2,file = "./ADA_DataDictionary_Freq_Markdown.csv",row.names = FALSE)
+```
+
+
+<!-- ```{r include=FALSE, message = FALSE,eval=FALSE , warning = FALSE, echo = FALSE, comment=NA, results='asis'}  -->
+<!-- ##################################################################################################################### -->
+<!-- ###############               1.2 you can choose to Save as csv file with indictor on the top    #################### -->
+<!-- ##################################################################################################################### -->
+
+
+<!-- dictionary_3  <- as.data.frame(dictionary) -->
+<!-- # dictionary$Check_box_var <- check_box -->
+<!-- posi <- which(duplicated(dictionary_3$Variable)) -->
+<!-- dictionary_3$Variable[posi] <- '' -->
+<!-- dictionary_3$Label[posi] <- '' -->
+<!-- dictionary_3$Position[posi] <- '' -->
+<!-- common_issues_var <- c("DPII","IpII","Non-Geo","Misspell")         #Can be changed by Archivists -->
+<!-- common_issues_val <- c("Length","Missspel","Encode","Missing")     # length inconsistent issue -->
+
+<!-- keyword_indicator <-  matrix(rep('',(length(common_issues_var)*ncol(dictionary_3))),ncol = ncol(dictionary_3 )) -->
+<!-- keyword_indicator[,2] <- common_issues_var -->
+<!-- keyword_indicator[,7] <- common_issues_val -->
+<!-- keyword_indicator <- data.frame(keyword_indicator) -->
+<!-- colnames (keyword_indicator) <- c( 'Serial','Check_box_var', 'Name', 'Variable_label', 'Value_labels', 'Frequency','Check_box_val') -->
+
+<!-- dictionary <- rbind(keyword_indicator,dictionary) -->
+<!-- write.csv(dictionary,file = "./ADA_DataDictionary_indicator_v1.0.csv",row.names = FALSE) -->
+
+<!-- ``` -->
+
+
+
+```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
+#####################################################################################################################
+###############   3. Create and format flextable object to print in Markdown , by click knit button on the top   ####################
+#####################################################################################################################
+
+dictionary_4 <- flextable(
+              dictionary, 
+              col_keys = c('Position', 'Variable','Label', 'Value','Value_labels', 'Frequency'))
+
+dictionary_4  <- merge_v           (dictionary_4 , j = ~ Position + Variable + Label)
+# dictionary_4  <- compose           (dictionary_4,i=1:length(Position), j = 2, as_paragraph(as_chunk('')))
+dictionary_4  <- border_inner_h    (dictionary_4 , part="all", border = fp_border(color="gray"))
+dictionary_4  <- align             (dictionary_4 , align = "left", part = "body")
+dictionary_4  <- valign            (dictionary_4 , valign = "top", part = "body")
+
+dictionary_4  <- color             (dictionary_4 , color = "black", part = "all")
+# dictionary  <- dictionary$col_keys
+
+flexPrintFun <- function (x){
+                x%>%
+                width (j = 1, width = 0.60)%>%
+                width (j = 2, width = 0.60)%>%
+                width (j = 3, width = 3.00)%>%
+                width (j = 4, width = 0.70)%>%
+                width (j = 5, width = 2.00)%>%
+                width (j = 6, width = 0.50)%>%
+                # width (j = 7, width = 0.50)%>%
+                hrule (rule = "auto", par = "all") }
+
+
+flexPrintFun (dictionary_4 )
+
+
+```
+
+

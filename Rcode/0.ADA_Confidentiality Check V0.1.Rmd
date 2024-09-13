@@ -1,12 +1,21 @@
 ---
-title: 'Confidentiality Check:'
-author: ''
-date: ' '
+title: "ADA Confidentiality Check Report: `r params$doc_title`"
+author: "`r params$author`"
+date: "`r format (Sys.time(), format='%d-%b-%Y')`" 
 output:
   word_document: default
   html_document:
     df_print: paged
   pdf_document: default
+params:
+  data_sav: NA
+  doc_title: NA
+  author: NA
+
+
+  
+  
+  
 ---
 
 ```{r message = FALSE, warning = FALSE, echo = FALSE, comment=NA, results='asis'} 
@@ -51,23 +60,29 @@ theme_box(flexPrintFun (summ))
 ################      Read data and get variable information       #################################
 ####################################################################################################
 
+# data <- haven::read_sav("Z:\\assda\\publish\\ANU\\Archivists\\RyanPerry\\Scanlon 2018-2021\\100072 - Scanlon 2018\\Processing_2022-03-03\\2133 Social Cohesion 2018 Final weighted - confidentialised.sav")
 
 
-data <- haven::read_sav("../Data/.sav")
+# data <- haven::read_sav(path_sav)
 
-conf_var  <- c( 'p_seifa', 'p_gender', 'p_age_group_ADA', 'd_education')
+
+# data_sav <- haven::read_sav('../Data/SRC2793 ADA Final 04-11-2022.sav')
+
+
+conf_var  <- c(' ')
 
 # conf_var  <- c('dem2a_3','dem2a_2', 'dem2a_1', 'dem9a', 'srcid','pcode','dem5','dem6','A2A','A2B','D4') # Add sus name, customisable global variable, 
                                                                                                         
-var_info  <- look_for(data, details = T) %>%                        # extract variable information from spss data
+var_info  <- look_for(params$data_sav) %>%                        # extract variable information from spss data
              lookfor_to_long_format() %>%                           # Expand the table by value label, Cartesian product with value label
              convert_list_columns_to_character()                    # Convert list to character for each element in the table
 
-varLabel <- var_label(data)                                         #extract variable label to varLabel
-varName  <- unique(var_info$variable)                               #extract variable name
+varLabel <- var_label(params$data_sav)                                         #extract variable label to varLabel
+varName  <- attributes(params$data_sav)$name                              #extract variable name
 
-colnames (var_info) <- c("pos", "variable", "label", "col_type", "levels", "value_labels", "class", "type",
-                         "na_values",  "na_range", "unique_values", "count_missing", "range")
+colnames (var_info) <- c("pos", "variable", "label", "col_type", "levels", "value_labels")
+
+
 ```
 
 
@@ -120,7 +135,15 @@ cat("\n"); cat("\n")
 #theme_box(flexPrintFun (missLabel_table))
 
 # theme_box(flexPrintFun(data.frame (sapply( missLabel_table, as.character))))
-theme_box(flexPrintFun(convert_list_columns_to_character(missLabel_table) ))
+# theme_box(flexPrintFun(convert_list_columns_to_character(missLabel_table) ))
+if (nrow(missLabel_table)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(missLabel_table) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( missLabel_table, as.character))))
+  
+}
+
 
 cat("\n"); cat("\n")
 
@@ -181,7 +204,16 @@ cat("*Table 2: List of variables with possible Direct Personally Identifiable In
 cat("\n"); cat("\n")
 #theme_box(flexPrintFun (personal_identifiable))
 
-theme_box(flexPrintFun(data.frame (sapply( personal_identifiable, as.character))))                   #print the table
+# theme_box(flexPrintFun(data.frame (sapply( personal_identifiable, as.character))))                   #print the table
+
+if (nrow(personal_identifiable)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(personal_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( personal_identifiable, as.character))))
+  
+}
+
 
 cat("\n"); cat("\n")
 cat("*DPII are linked to the highest level of identification risk. DPII in publicly released datasets may be considered as a breach of the law. Please confirm that, this information will only be available in the archival version of the datasets. This information will not be published as a part of any publicly released or restricted release dataset.*");cat("\n"); cat("\n")
@@ -219,7 +251,13 @@ cat (a)
 cat("\n"); cat("\n")
 cat("*Table 3: List of variables with possible Geospatial Indirect Personally Identifiable Information*")
 cat("\n"); cat("\n")
-theme_box(flexPrintFun(convert_list_columns_to_character(geographic_identifiable) ))
+if (nrow(geographic_identifiable)>0){
+
+  theme_box(flexPrintFun(convert_list_columns_to_character(geographic_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( geographic_identifiable, as.character))))
+  
+}
 
 cat("\n"); cat("\n")
 cat("*Geospatial IPII are regarded as a higher level of identification risk in the presence of other quasi identifiers (e.g. age, education, occupation). Geospatial IPII in the publicly released datasets may not be considered as a breach of the law.  This information may not be published as a part of publicly released dataset.*");
@@ -264,7 +302,7 @@ cat("\n"); cat("\n")
 
 posi <- c()                                                                    # 
 for (i in 1: length (conf_var)) {                                              # For every element in conf_var defined on the top
-  posi[i] <- which(unique(var_info$variable) == conf_var[i])                   # Find the position of corresponding element
+  posi[i] <- which(varName == conf_var[i])                   # Find the position of corresponding element
 }                                                                              # 
 dict_var <- paste(posi, conf_var, sep = ': ');                                 # Join each #conf_var and conf_var with ":  "(colon)
                                                                                #                 
@@ -282,9 +320,15 @@ cat(" The table represents a list of variables having at least one *possibly ide
 
 cat("\n"); cat("\n")
 
+if (nrow(demographic_identifiable)>0){
 
-theme_box(flexPrintFun(convert_list_columns_to_character(demographic_identifiable) ))
-
+  theme_box(flexPrintFun(convert_list_columns_to_character(demographic_identifiable) ))
+} else{
+  theme_box(flexPrintFun(data.frame(sapply( demographic_identifiable, as.character))))
+  
+}
+# theme_box(flexPrintFun(convert_list_columns_to_character(demographic_identifiable) ))
+# theme_box(flexPrintFun(data.frame (sapply( demographic_identifiable, as.character))))
 # Iussues with the list datatype in the dataframe
 
 
